@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Put,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -19,12 +20,12 @@ import { ObjectIdParam } from '@libs/utils/decorators/http.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // @Put("/update-profile/:userId")
-  // @HttpCode(HttpStatus.OK)
-  // async updateProfileUser(
-  //   @ObjectIdParam("userId") userId: string,
-  //   @Body() updateUserDto: UpdateUserDto
-  // ) {
-  //   return await this.userService.updateProfileUser(userId, updateUserDto);
-  // }
+  @Patch('/update-profile/:userId')
+  @HttpCode(HttpStatus.OK)
+  async updateProfileUser(
+    @ObjectIdParam('userId') userId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return await this.userService.updateProfileUser(userId, updateUserDto);
+  }
 }
