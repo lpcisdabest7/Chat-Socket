@@ -5,7 +5,7 @@ import { TokenModule } from '@libs/modules';
 import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [UserModule, TokenModule ],
+  imports: [UserModule, TokenModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

@@ -1,6 +1,6 @@
 export interface IAuthSocialProfile {
   id: string;
   email?: string;
-  avatar?: string;
+  avatarImage?: string;
   username?: string;
 }

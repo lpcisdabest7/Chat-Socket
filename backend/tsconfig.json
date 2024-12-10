@@ -21,7 +21,7 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "paths": {
-      "@app/*": ["apps/api-auth/src/*"],
+      "@app/*": ["src/*"],
       "@libs/*": ["libs/*"]
     }
   }

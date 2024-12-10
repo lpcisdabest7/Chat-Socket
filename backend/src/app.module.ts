@@ -5,6 +5,7 @@ import { CommandModule } from 'nestjs-command';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthGoogleModule } from './auth-google/auth-google.module';
+import { ChatModule } from './chat-socket/chat.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthGoogleModule } from './auth-google/auth-google.module';
     CommandModule,
     AuthModule,
     AuthGoogleModule,
+    ChatModule,
   ],
 })
 export class AppModule {}

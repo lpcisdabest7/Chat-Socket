@@ -57,7 +57,7 @@ export class UserService {
       return await this.userModel.create({
         email: socialUser.email,
         username: socialUser.username,
-        avatar: socialUser.avatar,
+        avatarImage: socialUser.avatarImage,
         providers: [{ provider: authProvider, providerId: socialUser.id }],
       });
     }
@@ -67,7 +67,7 @@ export class UserService {
       {
         $set: {
           email: socialUser.email || user.email,
-          avatar: socialUser.avatar || user.avatar,
+          avatarImage: socialUser.avatarImage || user.avatarImage,
           username: socialUser.username || user.username,
         },
         ...(user.providers.every(

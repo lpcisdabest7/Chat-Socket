@@ -4,7 +4,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@app/*": ["apps/api-auth/src/*"],
+      "@app/*": ["src/*"],
       "@libs/*": ["libs/*"]
     }
   }
