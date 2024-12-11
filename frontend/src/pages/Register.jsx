@@ -4,7 +4,11 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Link } from "react-router-dom";
-
+import { GoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../components/AuthContext";
+import axiosInstance from "../utils";
 // Define validation schema with custom error messages
 const schema = yup.object({
   firstName: yup.string().required("First name is required"),
@@ -23,13 +27,46 @@ export const Register = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     resolver: yupResolver(schema),
+    mode: "onChange",
   });
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log(data);
+    try {
+      const res = await axiosInstance.post("/v1/auth/register", data);
+      if (res.status === 200) {
+        console.log("Register response", res.data.data);
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Register error", error);
+    }
+  };
+
+  const handleGoogleLogin = async (response) => {
+    console.log(response);
+    try {
+      const res = await axiosInstance.post("/v1/auth/google/login", {
+        idToken: response.credential,
+      });
+      console.log(res);
+
+      console.log("Google login response", res.data.data);
+      const token = res.data.data.tokens.accessToken;
+      if (token) {
+        login(token);
+        navigate("/");
+      } else {
+        console.error("No token received from the server");
+      }
+    } catch (error) {
+      console.error("Google login error", error);
+    }
   };
 
   return (
@@ -76,7 +113,9 @@ export const Register = () => {
           <Error>{errors.password?.message}</Error>
         </div>
 
-        <button type="submit">Register</button>
+        <button type="submit" disabled={!isValid}>
+          Register
+        </button>
 
         <p>
           Already have an account?{" "}
@@ -87,10 +126,16 @@ export const Register = () => {
 
         <hr />
         <p>Or signup with</p>
-        <button className="button-group">
-          <i className="fa-brands fa-google" style={{ color: "#f54242" }}></i>
-          <p style={{ color: "#26292b" }}>Login with Google</p>
-        </button>
+
+        <GoogleLogin
+          onSuccess={handleGoogleLogin}
+          onError={(error) => console.log("Google login failed", error)}
+        >
+          <button className="button-group">
+            <i className="fa-brands fa-google" style={{ color: "#f54242" }}></i>
+            <p style={{ color: "#26292b" }}>Login with Google</p>
+          </button>
+        </GoogleLogin>
         <button className="button-group" style={{ backgroundColor: "#4257f5" }}>
           <i className="fa-brands fa-facebook" style={{ color: "#fff" }}></i>
           <p style={{ color: "#fff" }}>Login with Facebook</p>
