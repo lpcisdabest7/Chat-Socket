@@ -1,0 +1,42 @@
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { v4 as uuidv4 } from "uuid";
+import { LoggerService } from "../../modules/global/logger/logger.service";
+import { tap } from "rxjs/operators";
+
+@Injectable()
+export class HttpLoggerInterceptor implements NestInterceptor {
+  constructor(private readonly loggerService: LoggerService) {}
+  intercept(
+    executionContext: ExecutionContext,
+    next: CallHandler
+  ): Observable<unknown> {
+    const context = `${executionContext.getClass().name}/${
+      executionContext.getHandler().name
+    }`;
+
+    const request = executionContext.switchToHttp().getRequest();
+    const response = executionContext.switchToHttp().getResponse();
+
+    request["context"] = context;
+
+    if (request.url === "/health" || request.url === "/metrics") {
+      return next.handle();
+    }
+
+    if (!request.headers?.traceid) {
+      request.headers.traceid = uuidv4();
+      request.id = request.headers.traceid;
+    }
+    return next.handle().pipe(
+      tap(() => {
+        this.loggerService.pino(request, response);
+      })
+    );
+  }
+}

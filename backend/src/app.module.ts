@@ -1,10 +1,21 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { GlobalModule } from '@libs/modules/global/global.module';
+import { MongoDBModule } from '@libs/modules/database/mongodb/mongodb.module';
+import { CommandModule } from 'nestjs-command';
+import { HealthModule } from './health/health.module';
+import { AuthModule } from './auth/auth.module';
+import { AuthGoogleModule } from './auth-google/auth-google.module';
+import { ChatModule } from './chat-socket/chat.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    GlobalModule,
+    HealthModule,
+    MongoDBModule,
+    CommandModule,
+    AuthModule,
+    AuthGoogleModule,
+    ChatModule,
+  ],
 })
 export class AppModule {}
