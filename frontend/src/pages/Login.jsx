@@ -3,8 +3,10 @@ import styled from "styled-components";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
+import axiosInstance from "../utils";
+import { useAuth } from "../components/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 // Define validation schema with custom error messages
 const schema = yup.object({
   email: yup
@@ -21,21 +23,49 @@ export const Login = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     resolver: yupResolver(schema),
+    mode: "onChange",
   });
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log(data);
+    try {
+      const res = await axiosInstance.post("/v1/auth/login", data);
+      if (res.status === 200) {
+        console.log("Login response", res.data.data);
+        const token = res.data?.data?.token?.accessToken;
+        if (token) {
+          login(token);
+          navigate("/");
+        }
+      }
+    } catch (error) {
+      console.error("Login error", error);
+    }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (response) => {
+    console.log(response);
     try {
-      const res = await axios.get("/auth/google");
-      console.log("Google login response", res.data);
+      const res = await axiosInstance.post("/v1/auth/google/login", {
+        idToken: response.credential,
+      });
+      console.log(res);
+
+      console.log("Google login response", res.data.data);
+      const token = res.data.data.tokens.accessToken;
+      if (token) {
+        login(token);
+        navigate("/");
+      } else {
+        console.error("No token received from the server");
+      }
     } catch (error) {
-      console.log("Google login error", error);
+      console.error("Google login error", error);
     }
   };
 
@@ -63,7 +93,9 @@ export const Login = () => {
           <Error>{errors.password?.message}</Error>
         </div>
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={!isValid}>
+          Login
+        </button>
 
         <p>
           Don't have an account?{" "}
@@ -74,10 +106,18 @@ export const Login = () => {
 
         <hr />
         <p>Or signup with</p>
-        <button className="button-group" onClick={handleGoogleLogin}>
-          <i className="fa-brands fa-google" style={{ color: "#f54242" }}></i>
-          <p style={{ color: "#26292b" }}>Login with Google</p>
-        </button>
+
+        <GoogleLogin
+          onSuccess={handleGoogleLogin}
+          onError={(errors) =>
+            console.log("Error during login with google", errors)
+          }
+        >
+          <button className="button-group">
+            <i className="fa-brands fa-google" style={{ color: "#f54242" }}></i>
+            <p style={{ color: "#26292b" }}>Login with Google</p>
+          </button>
+        </GoogleLogin>
         <button
           className="button-group"
           style={{ backgroundColor: "#4257f5" }}
