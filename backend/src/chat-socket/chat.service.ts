@@ -6,6 +6,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { Message } from './model/message.model';
 import { ChatRoom } from './model/chatroom.model';
 import { JoinRoomDto } from './dto/join-room.dto';
+import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 
 @Injectable()
 export class ChatService {
@@ -69,5 +70,42 @@ export class ChatService {
 
   async getAllRooms(): Promise<ChatRoom[]> {
     return this.chatRoomModel.find().exec();
+  }
+
+  //chat with 1 vs 1
+  async createPrivateMessage(
+    createPrivateMessageDto: CreatePrivateMessageDto,
+  ): Promise<Message> {
+    const privateMessage = new this.messageModel({
+      userId: new Types.ObjectId(createPrivateMessageDto.senderId),
+      receiverId: new Types.ObjectId(createPrivateMessageDto.receiverId),
+      content: createPrivateMessageDto.content,
+      isPrivate: true,
+    });
+
+    return privateMessage.save();
+  }
+
+  async getPrivateMessages(
+    user1Id: string,
+    user2Id: string,
+  ): Promise<Message[]> {
+    return this.messageModel
+      .find({
+        $or: [
+          {
+            userId: new Types.ObjectId(user1Id),
+            receiverId: new Types.ObjectId(user2Id),
+            isPrivate: true,
+          },
+          {
+            userId: new Types.ObjectId(user2Id),
+            receiverId: new Types.ObjectId(user1Id),
+            isPrivate: true,
+          },
+        ],
+      })
+      .sort({ createdAt: 1 })
+      .exec();
   }
 }

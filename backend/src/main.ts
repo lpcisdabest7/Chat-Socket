@@ -21,6 +21,7 @@ import helmet from 'helmet';
 import { setupSwagger } from './setup-swagger';
 import { HttpInterceptor } from '@libs/utils/interceptors/http-response.interceptor';
 import { PrometheusMiddleware } from '@libs/utils/middlerware/prometheus.middleware';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const name = 'api swagger';
@@ -32,6 +33,7 @@ async function bootstrap() {
       cors: true,
     },
   );
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   app.enable('trust proxy'); // only if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
   app.use(helmet());

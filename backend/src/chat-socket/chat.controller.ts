@@ -6,6 +6,7 @@ import { Message } from './model/message.model';
 import { ChatRoom } from './model/chatroom.model';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 
 @ApiTags('Socket')
 @Controller('chat')
@@ -47,5 +48,21 @@ export class ChatController {
   @Get('rooms')
   async getAllRooms(): Promise<ChatRoom[]> {
     return this.chatService.getAllRooms();
+  }
+
+  //chat 1 vs 1
+  @Post('private-message')
+  async createPrivateMessage(
+    @Body() createPrivateMessageDto: CreatePrivateMessageDto,
+  ): Promise<Message> {
+    return this.chatService.createPrivateMessage(createPrivateMessageDto);
+  }
+
+  @Get('private-messages/:user1Id/:user2Id')
+  async getPrivateMessages(
+    @Param('user1Id') user1Id: string,
+    @Param('user2Id') user2Id: string,
+  ): Promise<Message[]> {
+    return this.chatService.getPrivateMessages(user1Id, user2Id);
   }
 }
