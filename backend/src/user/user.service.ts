@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { assignIn } from 'lodash';
 import { User } from './user.schema';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, ObjectId } from 'mongoose';
 import { generateHash } from '@libs/utils/util';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -11,6 +11,8 @@ import { ERROR_CODE } from '@libs/utils/const';
 import { IAuthSocialProfile } from 'src/auth/dto/auth.interface';
 import { AuthProvider } from 'src/auth/auth.type';
 import { UserRegisterDto } from 'src/auth/dto/user-register.dto';
+import { AddFriendDto } from './dto/add-friend.dto';
+import { Types } from 'mongoose';
 @Injectable()
 export class UserService {
   constructor(
@@ -104,5 +106,64 @@ export class UserService {
     }
     assignIn(user, updateUserDto);
     return await user.save();
+  }
+
+  async getFriends(userId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new ApiException(
+        'User not found',
+        HttpStatus.NOT_FOUND,
+        ERROR_CODE.CLIENT_BAD_REQUEST.errorCode,
+      );
+    }
+    const friends = await this.userModel
+      .find({ _id: { $in: user.friends } })
+      .select('username avatarImage');
+
+    return friends;
+  }
+
+  async addFriends(userId: string, dto: AddFriendDto) {
+    const { idFriends } = dto;
+
+    if (!idFriends || (Array.isArray(idFriends) && idFriends.length === 0)) {
+      throw new ApiException(
+        'No friends provided to add',
+        HttpStatus.BAD_REQUEST,
+        ERROR_CODE.CLIENT_BAD_REQUEST.errorCode,
+      );
+    }
+
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new ApiException(
+        'User not found',
+        HttpStatus.NOT_FOUND,
+        ERROR_CODE.CLIENT_BAD_REQUEST.errorCode,
+      );
+    }
+
+    const userIds = Array.isArray(idFriends) ? idFriends : [idFriends];
+    const objectIds = userIds.map((id) => {
+      if (!Types.ObjectId.isValid(id)) {
+        throw new ApiException(
+          `Invalid friend ID: ${id}`,
+          HttpStatus.BAD_REQUEST,
+          ERROR_CODE.CLIENT_BAD_REQUEST.errorCode,
+        );
+      }
+      return new Types.ObjectId(id);
+    });
+
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      user.id,
+      {
+        $addToSet: { friends: { $each: objectIds } },
+      },
+      { new: true },
+    );
+
+    return updatedUser;
   }
 }

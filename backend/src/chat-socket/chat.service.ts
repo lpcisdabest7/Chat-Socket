@@ -87,20 +87,20 @@ export class ChatService {
   }
 
   async getPrivateMessages(
-    user1Id: string,
-    user2Id: string,
+    senderId: string,
+    receiverId: string,
   ): Promise<Message[]> {
     return this.messageModel
       .find({
         $or: [
           {
-            userId: new Types.ObjectId(user1Id),
-            receiverId: new Types.ObjectId(user2Id),
+            userId: new Types.ObjectId(senderId),
+            receiverId: new Types.ObjectId(receiverId),
             isPrivate: true,
           },
           {
-            userId: new Types.ObjectId(user2Id),
-            receiverId: new Types.ObjectId(user1Id),
+            userId: new Types.ObjectId(receiverId),
+            receiverId: new Types.ObjectId(senderId),
             isPrivate: true,
           },
         ],

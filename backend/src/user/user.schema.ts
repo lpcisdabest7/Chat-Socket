@@ -30,6 +30,9 @@ export class User extends Document<Types.ObjectId> {
 
   @Prop({ type: Boolean, default: false })
   isSet: boolean;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
+  friends: Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

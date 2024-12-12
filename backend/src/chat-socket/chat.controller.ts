@@ -58,11 +58,11 @@ export class ChatController {
     return this.chatService.createPrivateMessage(createPrivateMessageDto);
   }
 
-  @Get('private-messages/:user1Id/:user2Id')
+  @Get('private-messages/:senderId/:receiverId')
   async getPrivateMessages(
-    @Param('user1Id') user1Id: string,
-    @Param('user2Id') user2Id: string,
+    @Param('senderId') senderId: string,
+    @Param('receiverId') receiverId: string,
   ): Promise<Message[]> {
-    return this.chatService.getPrivateMessages(user1Id, user2Id);
+    return this.chatService.getPrivateMessages(senderId, receiverId);
   }
 }
