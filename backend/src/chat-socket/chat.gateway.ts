@@ -30,7 +30,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('sendPublicMessage')
+  @SubscribeMessage('sendGroupMessage')
   async handleCreateMessage(client: Socket, payload: CreateMessageDto) {
     try {
       const message = await this.chatService.createMessage(payload);
