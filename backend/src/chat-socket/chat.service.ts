@@ -21,7 +21,7 @@ export class ChatService {
   ) {}
 
   async createMessage(createMessageDto: CreateMessageDto): Promise<Message> {
-    const message = new this.messageModel({
+    const publicMessage = new this.messageModel({
       userId: createMessageDto.userId
         ? new Types.ObjectId(createMessageDto.userId)
         : null,
@@ -32,11 +32,11 @@ export class ChatService {
     });
     if (createMessageDto.roomId) {
       await this.chatRoomModel.findByIdAndUpdate(createMessageDto.roomId, {
-        $push: { messages: message._id },
+        $push: { messages: publicMessage._id },
       });
     }
 
-    return message.save();
+    return publicMessage.save();
   }
 
   async getAllMessages(): Promise<Message[]> {
@@ -105,7 +105,22 @@ export class ChatService {
       content: createPrivateMessageDto.content,
       isPrivate: true,
     });
-
+    if (createPrivateMessageDto.roomId) {
+      await this.chatRoomModel.findByIdAndUpdate(
+        createPrivateMessageDto.roomId,
+        {
+          $addToSet: {
+            users: {
+              $each: [
+                new Types.ObjectId(createPrivateMessageDto.senderId),
+                new Types.ObjectId(createPrivateMessageDto.receiverId),
+              ],
+            },
+          },
+        },
+        { new: true },
+      );
+    }
     return privateMessage.save();
   }
 
