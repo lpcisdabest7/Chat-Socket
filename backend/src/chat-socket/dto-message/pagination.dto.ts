@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsString,
   IsOptional,
@@ -7,13 +7,13 @@ import {
   Min,
   Max,
   IsMongoId,
-} from "class-validator";
+} from 'class-validator';
 
 export class PaginationDto {
   @IsOptional()
   @ApiProperty({ required: false })
   @IsString()
-  @IsMongoId({ message: "Cursor must be a valid ObjectId" })
+  @IsMongoId({ message: 'Cursor must be a valid ObjectId' })
   cursor?: string;
 
   @ApiProperty({ required: false, default: 10 })
@@ -21,5 +21,5 @@ export class PaginationDto {
   @Min(1)
   @Max(100)
   @Type(() => Number)
-  limit: number = 10;
+  limit = 10;
 }

@@ -15,17 +15,10 @@ import { PaginationDto } from './dto-message/pagination.dto';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @Post('message')
-  async createMessage(
-    @Body() createMessageDto: CreateMessageDto,
-  ): Promise<Message> {
-    return this.chatService.createMessage(createMessageDto);
-  }
-
-  @Get('messages')
-  async getAllMessages(): Promise<Message[]> {
-    return this.chatService.getAllMessages();
-  }
+  // @Get('message')
+  // async getAllMessages(): Promise<Message[]> {
+  //   return this.chatService.getAllMessages();
+  // }
 
   @Get('messages/:roomId')
   async getAllMessagesByRoomId(
@@ -54,6 +47,13 @@ export class ChatController {
   async getAllRooms(): Promise<ChatRoom[]> {
     return this.chatService.getAllRooms();
   }
+  // chat group
+  @Post('group-message')
+  async createMessage(
+    @Body() createMessageDto: CreateMessageDto,
+  ): Promise<Message> {
+    return this.chatService.createMessage(createMessageDto);
+  }
 
   //chat 1 vs 1
   @Post('private-message')
@@ -63,16 +63,16 @@ export class ChatController {
     return this.chatService.createPrivateMessage(createPrivateMessageDto);
   }
 
-  @Get('private-messages/:senderId/:receiverId')
-  async getPrivateMessages(
-    @Query() paginationDto: PaginationDto,
-    @Param('senderId') senderId: string,
-    @Param('receiverId') receiverId: string,
-  ) {
-    return this.chatService.getPrivateMessages(
-      senderId,
-      receiverId,
-      paginationDto,
-    );
-  }
+  // @Get('private-messages/:senderId/:receiverId')
+  // async getPrivateMessages(
+  //   @Query() paginationDto: PaginationDto,
+  //   @Param('senderId') senderId: string,
+  //   @Param('receiverId') receiverId: string,
+  // ) {
+  //   return this.chatService.getPrivateMessages(
+  //     senderId,
+  //     receiverId,
+  //     paginationDto,
+  //   );
+  // }
 }

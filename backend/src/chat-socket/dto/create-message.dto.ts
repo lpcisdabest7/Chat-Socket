@@ -8,5 +8,5 @@ export class CreateMessageDto {
   content: string;
 
   @StringField()
-  roomId?: string;
+  roomId: string;
 }

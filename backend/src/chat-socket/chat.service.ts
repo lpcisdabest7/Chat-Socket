@@ -101,6 +101,7 @@ export class ChatService {
     const privateMessage = new this.messageModel({
       userId: new Types.ObjectId(createPrivateMessageDto.senderId),
       receiverId: new Types.ObjectId(createPrivateMessageDto.receiverId),
+      roomId: new Types.ObjectId(createPrivateMessageDto.roomId),
       content: createPrivateMessageDto.content,
       isPrivate: true,
     });
@@ -171,8 +172,6 @@ export class ChatService {
       ],
       ...(cursor && { _id: { $lte: new Types.ObjectId(cursor) } }),
     };
-
-    console.log('Query:', query);
 
     const listMessagesPrivate = await this.messageModel
       .find(query)

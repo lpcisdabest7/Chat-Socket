@@ -2,8 +2,8 @@ import {
   EnumFieldOptional,
   NumberFieldOptional,
   StringFieldOptional,
-} from "@libs/utils/decorators/field.decorator";
-import { Order } from "../constants/order";
+} from '@libs/utils/decorators/field.decorator';
+import { Order } from '../constants/order';
 
 export class PageOptionsDto {
   @EnumFieldOptional(() => Order, {
@@ -12,7 +12,7 @@ export class PageOptionsDto {
   readonly order: Order = Order.DESC;
 
   @StringFieldOptional({
-    default: "createdAt",
+    default: 'createdAt',
   })
   readonly orderField?: string;
 
