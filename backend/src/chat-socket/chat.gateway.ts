@@ -95,7 +95,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server
         .to(payload.receiverId)
         .emit(message.roomId.toString(), message);
-
+      this.server.to(payload.senderId).emit(message.roomId.toString(), message);
       return message;
     } catch (error) {
       console.error('Error sending private message:', error);

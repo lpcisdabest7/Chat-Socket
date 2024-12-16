@@ -15,10 +15,13 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           axiosInstance
-            .get("/v1/auth/me")
+            .get("api/v1/auth/me")
             .then((response) => {
               setUser(response.data.data);
-              console.log(response.data.data);
+              localStorage.setItem(
+                "chat-app-user",
+                JSON.stringify(response.data.data)
+              );
             })
             .catch((error) => console.error(`Error fetching data:`, error));
         } catch (error) {
