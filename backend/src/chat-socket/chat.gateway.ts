@@ -35,8 +35,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const message = await this.chatService.createMessage(payload);
 
-      // Gửi tin nhắn đến tất cả client trong phòng
-      this.server.to(payload.roomId).emit('newMessage', message);
+      // Phát tin nhắn bao gồm userId và nội dung đến tất cả client trong phòng
+      this.server.to(payload.roomId).emit('newMessage', {
+        content: message.content,
+        userId: payload.userId, // Thêm userId vào tin nhắn
+      });
 
       return message;
     } catch (error) {
@@ -88,7 +91,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const message = await this.chatService.createPrivateMessage(payload);
-
       // Gửi tin nhắn tới người nhận cụ thể
       this.server.to(payload.receiverId).emit('privateMessage', message);
 
