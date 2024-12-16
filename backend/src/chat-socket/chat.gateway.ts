@@ -30,13 +30,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('createMessage')
+  @SubscribeMessage('sendPublicMessage')
   async handleCreateMessage(client: Socket, payload: CreateMessageDto) {
     try {
       const message = await this.chatService.createMessage(payload);
 
       // Phát tin nhắn bao gồm userId và nội dung đến tất cả client trong phòng
-      this.server.to(payload.roomId).emit('newMessage', {
+      this.server.to(payload.roomId).emit(payload.roomId, {
         content: message.content,
         userId: payload.userId, // Thêm userId vào tin nhắn
       });
