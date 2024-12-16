@@ -92,7 +92,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const message = await this.chatService.createPrivateMessage(payload);
       // Gửi tin nhắn tới người nhận cụ thể
-      this.server.to(payload.receiverId).emit(payload.roomId, message);
+      this.server
+        .to(payload.receiverId)
+        .emit(message.roomId.toString(), message);
 
       return message;
     } catch (error) {

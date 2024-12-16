@@ -83,9 +83,7 @@ export class ChatService {
   }
 
   //chat with 1 vs 1
-  async createPrivateMessage(
-    createPrivateMessageDto: CreatePrivateMessageDto,
-  ): Promise<Message> {
+  async createPrivateMessage(createPrivateMessageDto: CreatePrivateMessageDto) {
     const sender = await this.userModel.findById(
       createPrivateMessageDto.senderId,
     );
@@ -98,30 +96,42 @@ export class ChatService {
     if (!receiver) {
       throw new ApiException('Receiver not found', HttpStatus.BAD_REQUEST);
     }
+
+    let room: ChatRoom = await this.chatRoomModel.findOne({
+      users: {
+        $all: [
+          new Types.ObjectId(createPrivateMessageDto.senderId),
+          new Types.ObjectId(createPrivateMessageDto.receiverId),
+        ],
+      },
+    });
+    if (!room) {
+      room = await this.createRoom();
+    }
+
     const privateMessage = new this.messageModel({
       userId: new Types.ObjectId(createPrivateMessageDto.senderId),
       receiverId: new Types.ObjectId(createPrivateMessageDto.receiverId),
-      roomId: new Types.ObjectId(createPrivateMessageDto.roomId),
+      roomId: room._id,
       content: createPrivateMessageDto.content,
       isPrivate: true,
     });
-    if (createPrivateMessageDto.roomId) {
-      await this.chatRoomModel.findByIdAndUpdate(
-        createPrivateMessageDto.roomId,
-        {
-          $addToSet: {
-            users: {
-              $each: [
-                new Types.ObjectId(createPrivateMessageDto.senderId),
-                new Types.ObjectId(createPrivateMessageDto.receiverId),
-              ],
-            },
+
+    await this.chatRoomModel.findByIdAndUpdate(
+      room._id,
+      {
+        $addToSet: {
+          users: {
+            $each: [
+              new Types.ObjectId(createPrivateMessageDto.senderId),
+              new Types.ObjectId(createPrivateMessageDto.receiverId),
+            ],
           },
         },
-        { new: true },
-      );
-    }
-    return privateMessage.save();
+      },
+      { new: true },
+    );
+    return await privateMessage.save();
   }
 
   async getPrivateMessages1(

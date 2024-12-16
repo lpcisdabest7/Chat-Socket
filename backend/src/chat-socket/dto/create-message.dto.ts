@@ -1,4 +1,7 @@
-import { StringField } from '@libs/utils/decorators/field.decorator';
+import {
+  StringField,
+  StringFieldOptional,
+} from '@libs/utils/decorators/field.decorator';
 
 export class CreateMessageDto {
   @StringField()
@@ -7,6 +10,6 @@ export class CreateMessageDto {
   @StringField()
   content: string;
 
-  @StringField()
-  roomId: string;
+  @StringFieldOptional()
+  roomId?: string;
 }
