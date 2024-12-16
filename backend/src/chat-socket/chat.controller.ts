@@ -8,6 +8,7 @@ import { JoinRoomDto } from './dto/join-room.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
+import { PaginationDto } from './dto-message/pagination.dto';
 
 @ApiTags('Socket')
 @Controller('chat')
@@ -27,8 +28,11 @@ export class ChatController {
   }
 
   @Get('messages/:roomId')
-  async getMessagesByRoom(@Param('roomId') roomId: string): Promise<Message[]> {
-    return this.chatService.getMessagesByRoom(roomId);
+  async getAllMessagesByRoomId(
+    @Param('roomId') roomId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.chatService.getAllMessagesByRoomId(roomId, paginationDto);
   }
 
   @Post('room')
@@ -61,7 +65,7 @@ export class ChatController {
 
   @Get('private-messages/:senderId/:receiverId')
   async getPrivateMessages(
-    @Query() paginationDto: PagingOffsetDto,
+    @Query() paginationDto: PaginationDto,
     @Param('senderId') senderId: string,
     @Param('receiverId') receiverId: string,
   ) {

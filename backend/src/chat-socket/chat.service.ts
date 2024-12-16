@@ -10,6 +10,7 @@ import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 import { ApiException } from '@libs/utils/exception';
 import { User } from '@app/user/user.schema';
 import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
+import { PaginationDto } from './dto-message/pagination.dto';
 
 @Injectable()
 export class ChatService {
@@ -107,14 +108,14 @@ export class ChatService {
     return privateMessage.save();
   }
 
-  async getPrivateMessages(
+  async getPrivateMessages1(
     senderId: string,
     receiverId: string,
     paginationDto: PagingOffsetDto,
   ) {
     const { page, limit } = paginationDto;
     const skip = (page - 1) * limit;
-    const listMessagePrivate = await this.messageModel
+    const listMessagesPrivate = await this.messageModel
       .find({
         $or: [
           {
@@ -135,17 +136,99 @@ export class ChatService {
       .limit(limit)
       .exec();
     const totalRecords = await this.userModel.countDocuments(
-      listMessagePrivate,
+      listMessagesPrivate,
     );
 
     const totalPages = Math.ceil(totalRecords / limit);
 
     return {
-      listMessagePrivate,
+      listMessagePrivate: listMessagesPrivate,
       currentPage: page,
       totalPages,
       hasNextPage: page < totalPages,
       hasPreviousPage: page > 1,
+    };
+  }
+
+  async getPrivateMessages(
+    senderId: string,
+    receiverId: string,
+    paginationDto: PaginationDto,
+  ) {
+    const { cursor, limit } = paginationDto;
+
+    const query: Record<string, any> = {
+      isPrivate: true,
+      $or: [
+        {
+          userId: new Types.ObjectId(senderId),
+          receiverId: new Types.ObjectId(receiverId),
+        },
+        {
+          userId: new Types.ObjectId(receiverId),
+          receiverId: new Types.ObjectId(senderId),
+        },
+      ],
+      ...(cursor && { _id: { $lte: new Types.ObjectId(cursor) } }),
+    };
+
+    console.log('Query:', query);
+
+    const listMessagesPrivate = await this.messageModel
+      .find(query)
+      .populate({ path: 'userId', select: 'username avatarImage' })
+      .sort({ _id: -1 })
+      .limit(limit + 1)
+      .exec();
+
+    const hasNextPage = listMessagesPrivate.length > limit;
+    const nextCursor = hasNextPage
+      ? listMessagesPrivate[listMessagesPrivate.length - 1]._id
+      : null;
+
+    if (hasNextPage) {
+      listMessagesPrivate.pop();
+    }
+
+    return {
+      listMessagesPrivate,
+      nextCursor,
+      hasNextPage,
+    };
+  }
+
+  async getAllMessagesByRoomId(roomId: string, paginationDto: PaginationDto) {
+    const { cursor, limit } = paginationDto;
+
+    const query: Record<string, any> = {
+      roomId: new Types.ObjectId(roomId),
+      ...(cursor &&
+        cursor && {
+          _id: { $lte: new Types.ObjectId(cursor) },
+        }),
+    };
+
+    const listAllMessagesByRoomId = await this.messageModel
+      .find(query)
+      .populate({ path: 'userId', select: 'username avatarImage' })
+      .sort({ _id: -1 })
+      .limit(limit + 1)
+      .exec();
+
+    const hasNextPage = listAllMessagesByRoomId.length > limit;
+
+    const nextCursor = hasNextPage
+      ? listAllMessagesByRoomId[listAllMessagesByRoomId.length - 1]._id
+      : null;
+
+    if (hasNextPage) {
+      listAllMessagesByRoomId.pop();
+    }
+
+    return {
+      results: listAllMessagesByRoomId,
+      nextCursor,
+      hasNext: hasNextPage,
     };
   }
 }
