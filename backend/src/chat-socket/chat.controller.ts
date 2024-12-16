@@ -1,5 +1,5 @@
 // src/chat/chat.controller.ts
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Message } from './model/message.model';
@@ -7,6 +7,7 @@ import { ChatRoom } from './model/chatroom.model';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
+import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
 
 @ApiTags('Socket')
 @Controller('chat')
@@ -60,9 +61,14 @@ export class ChatController {
 
   @Get('private-messages/:senderId/:receiverId')
   async getPrivateMessages(
+    @Query() paginationDto: PagingOffsetDto,
     @Param('senderId') senderId: string,
     @Param('receiverId') receiverId: string,
-  ): Promise<Message[]> {
-    return this.chatService.getPrivateMessages(senderId, receiverId);
+  ) {
+    return this.chatService.getPrivateMessages(
+      senderId,
+      receiverId,
+      paginationDto,
+    );
   }
 }

@@ -9,6 +9,7 @@ import { JoinRoomDto } from './dto/join-room.dto';
 import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 import { ApiException } from '@libs/utils/exception';
 import { User } from '@app/user/user.schema';
+import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
 
 @Injectable()
 export class ChatService {
@@ -109,8 +110,11 @@ export class ChatService {
   async getPrivateMessages(
     senderId: string,
     receiverId: string,
-  ): Promise<Message[]> {
-    return this.messageModel
+    paginationDto: PagingOffsetDto,
+  ) {
+    const { page, limit } = paginationDto;
+    const skip = (page - 1) * limit;
+    const listMessagePrivate = await this.messageModel
       .find({
         $or: [
           {
@@ -125,7 +129,23 @@ export class ChatService {
           },
         ],
       })
-      .sort({ createdAt: 1 })
+      .populate({ path: 'userId', select: 'username avatarImage' })
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .exec();
+    const totalRecords = await this.userModel.countDocuments(
+      listMessagePrivate,
+    );
+
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    return {
+      listMessagePrivate,
+      currentPage: page,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
   }
 }

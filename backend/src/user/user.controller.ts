@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -16,6 +17,7 @@ import { Auth, ObjectIdParam } from '@libs/utils/decorators/http.decorator';
 import { User } from './user.schema';
 import { AuthUser } from '@libs/utils/decorators/auth-user.decorator';
 import { AddFriendDto } from './dto/add-friend.dto';
+import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
 
 @ApiTags('User')
 @Controller({
@@ -24,6 +26,13 @@ import { AddFriendDto } from './dto/add-friend.dto';
 })
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('/')
+  @Auth()
+  @HttpCode(HttpStatus.OK)
+  async getAllUsers(@Query() pagingDto: PagingOffsetDto) {
+    return await this.userService.getAllUsers(pagingDto);
+  }
 
   @Get('/friends')
   @Auth()

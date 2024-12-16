@@ -13,6 +13,7 @@ import { AuthProvider } from 'src/auth/auth.type';
 import { UserRegisterDto } from 'src/auth/dto/user-register.dto';
 import { AddFriendDto } from './dto/add-friend.dto';
 import { Types } from 'mongoose';
+import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -165,5 +166,27 @@ export class UserService {
     );
 
     return updatedUser;
+  }
+
+  async getAllUsers(paginationDto: PagingOffsetDto) {
+    const { page, limit } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const listUsers = await this.userModel
+      .find()
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    const totalRecords = await this.userModel.countDocuments(listUsers);
+
+    const totalPages = Math.ceil(totalRecords / limit);
+
+    return {
+      listUsers,
+      currentPage: page,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    };
   }
 }
