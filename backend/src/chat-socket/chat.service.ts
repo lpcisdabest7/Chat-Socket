@@ -55,17 +55,40 @@ export class ChatService {
   }
 
   async joinRoom(joinRoomDto: JoinRoomDto): Promise<ChatRoom> {
+    // Step 1: Find the user by userId
     const user = await this.userModel.findById(joinRoomDto.userId);
+
     if (!user) {
+      // If user not found, throw an ApiException with a BAD_REQUEST error
       throw new ApiException('User not found', HttpStatus.BAD_REQUEST);
     }
-    return this.chatRoomModel
+
+    // Step 2: Check if the room exists
+    const room = await this.chatRoomModel.findById(joinRoomDto.roomId);
+    if (!room) {
+      // If room not found, throw an ApiException with a NOT_FOUND error
+      throw new ApiException('Chat room not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Step 3: Add the user to the room (avoid duplicates)
+    const updatedRoom = await this.chatRoomModel
       .findByIdAndUpdate(
         joinRoomDto.roomId,
         { $addToSet: { users: new Types.ObjectId(joinRoomDto.userId) } },
-        { new: true },
+        { new: true }, // Return the updated room after the operation
       )
       .exec();
+
+    if (!updatedRoom) {
+      // If there is an issue with updating the room, throw an exception
+      throw new ApiException(
+        'Failed to add user to room',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    // Return the updated room
+    return updatedRoom;
   }
 
   async leaveRoom(joinRoomDto: JoinRoomDto): Promise<ChatRoom> {

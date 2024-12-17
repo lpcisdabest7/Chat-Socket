@@ -71,8 +71,8 @@ export const Chat = () => {
           <ChatContainer
             currentChat={currentChat}
             currentUser={currentUser}
-            socket={socket}
-          ></ChatContainer>
+            socket={socket.current}
+          />
         )}
       </div>
     </StyledChat>

@@ -13,7 +13,7 @@ import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // Điều chỉnh origin phù hợp với frontend của bạn
+    origin: '*', // Adjust this according to your frontend origin
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -39,7 +39,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content: message.content,
         userId: payload.userId,
       });
-
       return message;
     } catch (error) {
       console.error('Error creating message:', error);
@@ -52,7 +51,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const room = await this.chatService.joinRoom(payload);
       client.join(payload.roomId);
 
-      // Thông báo cho các thành viên khác trong phòng
+      // Notify others in the room
       this.server.to(payload.roomId).emit('userJoined', {
         userId: payload.userId,
         roomId: payload.roomId,
@@ -70,7 +69,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const room = await this.chatService.leaveRoom(payload);
       client.leave(payload.roomId);
 
-      // Thông báo cho các thành viên khác trong phòng
+      // Notify others in the room
       this.server.to(payload.roomId).emit('userLeft', {
         userId: payload.userId,
         roomId: payload.roomId,
@@ -82,7 +81,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  // chat 1 vs 1
   @SubscribeMessage('sendPrivateMessage')
   async handleSendPrivateMessage(
     client: Socket,
@@ -90,7 +88,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const message = await this.chatService.createPrivateMessage(payload);
-      // Gửi tin nhắn tới người nhận cụ thể
+      // Ensure roomId is correct (could be an ObjectId or string)
       this.server.to(message.roomId.toString()).emit('privateMessage', message);
 
       return message;

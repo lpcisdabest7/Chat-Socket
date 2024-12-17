@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
-import { Logout } from "./Logout";
-import { ChatInput } from "./ChatInput";
 import { ChatMessages } from "./ChatMessages";
+import { ChatInput } from "./ChatInput";
 import axiosInstance from "../utils";
+import { Logout } from "./Logout";
 
 const getAvatarSource = (avatarImage) => {
   if (avatarImage.startsWith("PHN")) {
@@ -15,73 +15,90 @@ const getAvatarSource = (avatarImage) => {
 export const ChatContainer = ({ currentChat, currentUser, socket }) => {
   const [messages, setMessages] = useState([]);
   const [roomID, setRoomID] = useState("");
-  console.log("CURRENT CHAT", currentChat);
-  console.log("CURRENT USER", currentUser);
+
+  // Track whether the component has mounted
+  const isMounted = useRef(false);
 
   useEffect(() => {
+    // Fetch messages on currentChat or roomID change
     const fetchMessages = async () => {
-      const res = await axiosInstance.post(
-        `/api/chat/messages/${currentUser._id}/${currentChat._id}`,
-        {
-          senderId: currentUser._id,
-          receiverId: currentChat._id,
-        }
-      );
+      if (!currentChat || !currentUser) return;
 
-      console.log(res);
-      if (res.data.data._id) {
-        setRoomID(res.data.data._id);
+      try {
+        const res = await axiosInstance.post(
+          `/api/chat/messages/${currentUser._id}/${currentChat._id}`,
+          {
+            senderId: currentUser._id,
+            receiverId: currentChat._id,
+          }
+        );
+
+        if (res.data.data._id) {
+          setRoomID(res.data.data._id); // Set roomID after fetching messages
+        }
+
+        const response = await axiosInstance.get(
+          `/api/chat/messages/${res.data.data._id}`
+        );
+        setMessages(response.data.data.results);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
       }
-      const response = await axiosInstance.get(
-        `/api/chat/messages/${res.data.data._id}`
-      );
-      console.log(response);
-      setMessages(response.data.data.results);
     };
 
     fetchMessages();
-  }, [currentChat, roomID]);
+  }, [currentChat, currentUser]);
 
+  // Handle sending a message via socket and update local state
   const handleSendChat = async (message) => {
-    console.log(message, "SENDING MESSAGE");
+    if (socket) {
+      socket.emit("sendPrivateMessage", {
+        senderId: currentUser._id,
+        receiverId: currentChat._id,
+        content: message,
+        roomId: roomID,
+      });
 
-    socket.current.emit("sendPrivateMessage", {
-      senderId: currentUser._id,
-      receiverId: currentChat._id,
-      content: message,
-      roomId: roomID,
-    });
-
-    const newMessage = {
-      senderId: currentUser._id,
-      receiverId: currentChat._id,
-      content: message,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isPrivate: true,
-      roomId: roomID,
-    };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+      // Add the new message to the state (UI will re-render)
+      const newMessage = {
+        senderId: currentUser._id,
+        receiverId: currentChat._id,
+        content: message,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isPrivate: true,
+        roomId: roomID,
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    }
   };
 
+  // Set up socket listener for real-time messages
   useEffect(() => {
-    if (socket.current) {
-      socket.current.on("privateMessage", (data) => {
-        console.log("New message received via socket:", data);
-
-        setMessages((prevMessages) => {
-          // Kiểm tra dữ liệu trước khi cập nhật
-          return [...prevMessages, data]; // Thêm tin nhắn mới vào cuối danh sách
-        });
+    if (socket && currentChat && isMounted.current) {
+      socket.emit("joinRoom", {
+        roomId: roomID,
+        userId: currentUser._id,
       });
+
+      socket.on("privateMessage", (data) => {
+        // Check if new message is for the current room
+        if (data.roomId === roomID) {
+          setMessages((prevMessages) => [...prevMessages, data]);
+        }
+      });
+
+      // Cleanup the listener when the component unmounts or currentChat changes
+      return () => {
+        socket.off("privateMessage");
+      };
     }
 
-    return () => {
-      if (socket.current) {
-        socket.current.off("privateMessage");
-      }
-    };
-  }, [currentChat]);
+    // Set isMounted flag to true after the first render
+    if (!isMounted.current) {
+      isMounted.current = true;
+    }
+  }, [socket, currentChat, roomID]); // Only run when `socket` or `currentChat` changes
 
   return (
     <div className="chat-container" style={{ display: "flex", width: "100%" }}>
@@ -99,7 +116,7 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
                 <h4>{currentChat.username}</h4>
               </div>
             </div>
-            <Logout></Logout>
+            <Logout />
           </div>
           <ChatMessages
             messages={messages}

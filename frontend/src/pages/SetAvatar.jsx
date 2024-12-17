@@ -36,8 +36,6 @@ export const SetAvatar = () => {
         }
       );
 
-      console.log(data);
-
       if (data.data.isSet) {
         user.isSetAvatarImage = true;
         user.avatarImage = data.data.avatarImage;
