@@ -97,28 +97,13 @@ export class ChatService {
       throw new ApiException('Receiver not found', HttpStatus.BAD_REQUEST);
     }
 
-    let room: ChatRoom = await this.chatRoomModel.findOne({
-      users: {
-        $all: [
-          new Types.ObjectId(createPrivateMessageDto.senderId),
-          new Types.ObjectId(createPrivateMessageDto.receiverId),
-        ],
-      },
-    });
-    if (!room) {
-      room = await this.createRoom();
+    if (!createPrivateMessageDto.roomId) {
+      const room: ChatRoom = await this.createRoom();
+      createPrivateMessageDto.roomId = room._id.toString();
     }
 
-    const privateMessage = new this.messageModel({
-      userId: new Types.ObjectId(createPrivateMessageDto.senderId),
-      receiverId: new Types.ObjectId(createPrivateMessageDto.receiverId),
-      roomId: room._id,
-      content: createPrivateMessageDto.content,
-      isPrivate: true,
-    });
-
     await this.chatRoomModel.findByIdAndUpdate(
-      room._id,
+      createPrivateMessageDto.roomId,
       {
         $addToSet: {
           users: {
@@ -131,6 +116,14 @@ export class ChatService {
       },
       { new: true },
     );
+    const privateMessage = new this.messageModel({
+      userId: new Types.ObjectId(createPrivateMessageDto.senderId),
+      receiverId: new Types.ObjectId(createPrivateMessageDto.receiverId),
+      roomId: new Types.ObjectId(createPrivateMessageDto.roomId),
+      content: createPrivateMessageDto.content,
+      isPrivate: true,
+    });
+
     return await privateMessage.save();
   }
 

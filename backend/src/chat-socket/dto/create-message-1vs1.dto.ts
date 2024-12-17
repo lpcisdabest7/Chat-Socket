@@ -1,4 +1,7 @@
-import { StringField } from '@libs/utils/decorators/field.decorator';
+import {
+  StringField,
+  StringFieldOptional,
+} from '@libs/utils/decorators/field.decorator';
 
 export class CreatePrivateMessageDto {
   @StringField({ default: '67581350a8ac8e640af96d5d' })
@@ -9,4 +12,7 @@ export class CreatePrivateMessageDto {
 
   @StringField()
   content?: string;
+
+  @StringFieldOptional()
+  roomId?: string;
 }

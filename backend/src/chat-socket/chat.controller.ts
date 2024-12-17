@@ -15,11 +15,6 @@ import { PaginationDto } from './dto-message/pagination.dto';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  // @Get('message')
-  // async getAllMessages(): Promise<Message[]> {
-  //   return this.chatService.getAllMessages();
-  // }
-
   @Get('messages/:roomId')
   async getAllMessagesByRoomId(
     @Param('roomId') roomId: string,
