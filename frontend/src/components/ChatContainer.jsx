@@ -58,18 +58,6 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
         content: message,
         roomId: roomID,
       });
-
-      // Add the new message to the state (UI will re-render)
-      const newMessage = {
-        senderId: currentUser._id,
-        receiverId: currentChat._id,
-        content: message,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPrivate: true,
-        roomId: roomID,
-      };
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
     }
   };
 
