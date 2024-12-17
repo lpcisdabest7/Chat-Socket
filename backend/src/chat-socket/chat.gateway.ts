@@ -13,7 +13,7 @@ import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // Điều chỉnh origin phù hợp với frontend của bạn
+    origin: '*', // Adjust this according to your frontend origin
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -34,12 +34,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleCreateMessage(client: Socket, payload: CreateMessageDto) {
     try {
       const message = await this.chatService.createMessage(payload);
-
+      console.log(
+        `Message created: ${message.content}, Room: ${payload.roomId}`,
+      );
       this.server.to(payload.roomId).emit('groupMessage', {
         content: message.content,
         userId: payload.userId,
       });
-
       return message;
     } catch (error) {
       console.error('Error creating message:', error);
@@ -50,14 +51,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleJoinRoom(client: Socket, payload: JoinRoomDto) {
     try {
       const room = await this.chatService.joinRoom(payload);
+      console.log(`Client ${client.id} joining room ${payload.roomId}`);
       client.join(payload.roomId);
 
-      // Thông báo cho các thành viên khác trong phòng
+      // Notify others in the room
       this.server.to(payload.roomId).emit('userJoined', {
         userId: payload.userId,
         roomId: payload.roomId,
       });
 
+      console.log(`User ${payload.userId} joined room ${payload.roomId}`);
       return room;
     } catch (error) {
       console.error('Error joining room:', error);
@@ -68,21 +71,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleLeaveRoom(client: Socket, payload: JoinRoomDto) {
     try {
       const room = await this.chatService.leaveRoom(payload);
+      console.log(`Client ${client.id} leaving room ${payload.roomId}`);
       client.leave(payload.roomId);
 
-      // Thông báo cho các thành viên khác trong phòng
+      // Notify others in the room
       this.server.to(payload.roomId).emit('userLeft', {
         userId: payload.userId,
         roomId: payload.roomId,
       });
 
+      console.log(`User ${payload.userId} left room ${payload.roomId}`);
       return room;
     } catch (error) {
       console.error('Error leaving room:', error);
     }
   }
 
-  // chat 1 vs 1
   @SubscribeMessage('sendPrivateMessage')
   async handleSendPrivateMessage(
     client: Socket,
@@ -90,7 +94,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const message = await this.chatService.createPrivateMessage(payload);
-      // Gửi tin nhắn tới người nhận cụ thể
+      console.log(`Emitting private message to room ${message.roomId}`);
+      // Ensure roomId is correct (could be an ObjectId or string)
+      console.log(`Room ID for private message: ${message.roomId.toString()}`);
       this.server.to(message.roomId.toString()).emit('privateMessage', message);
 
       return message;
