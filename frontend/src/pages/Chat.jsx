@@ -7,13 +7,14 @@ import { Contacts } from "../components/Contacts";
 import { Welcome } from "../components/Welcome";
 import { ChatContainer } from "../components/ChatContainer";
 import { io } from "socket.io-client";
+import { ChatGroupContainer } from "../components/ChatGroupContainer";
 
 export const Chat = () => {
-  const { user, isAuthenticated, logout } = useAuth();
   const [contacts, setContacts] = useState([]);
   const [currentUser, setCurrentUser] = useState(undefined);
   const [currentChat, setCurrentChat] = useState(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGroupChat, setIsGroupChat] = useState(false);
   const navigate = useNavigate();
   const socket = useRef();
 
@@ -54,6 +55,12 @@ export const Chat = () => {
   }, [currentUser]);
 
   const handleSelectContact = (contact) => {
+    console.log(contact);
+    if (contact.members) {
+      setIsGroupChat(true);
+    } else {
+      setIsGroupChat(false);
+    }
     setCurrentChat(contact);
   };
 
@@ -67,6 +74,11 @@ export const Chat = () => {
         />
         {isLoading && currentChat === undefined ? (
           <Welcome user={currentUser} />
+        ) : isGroupChat ? (
+          <ChatGroupContainer
+            currentUser={currentUser}
+            socket={socket.current}
+          />
         ) : (
           <ChatContainer
             currentChat={currentChat}

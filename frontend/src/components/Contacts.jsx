@@ -1,10 +1,26 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import axiosInstance from "../utils";
+import { IoMdPersonAdd } from "react-icons/io";
+
+const getAvatarSource = (avatarImage = "") => {
+  if (avatarImage.startsWith("PHN")) {
+    return `data:image/svg+xml;base64,${avatarImage}`;
+  }
+  return avatarImage;
+};
 
 export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserAvatar, setCurrentUserAvatar] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
+  const [groupChats, setGroupChats] = useState([]); // State for storing group chats
+  const [groupName, setGroupName] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState(null); // State to store the selected group
+  const [messages, setMessages] = useState([]); // Messages for the selected group
+  const [newMessage, setNewMessage] = useState(""); // State for the new message input
+  const [currentGroupSelected, setCurrentGroupSelected] = useState(null);
+  const [groupUsers, setGroupUsers] = useState([]);
 
   useEffect(() => {
     if (currentUser) {
@@ -13,16 +29,65 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    const fetchGroupChats = async () => {
+      const res = await axiosInstance.get("/api/chat/rooms");
+      console.log(res.data.data);
+      setGroupChats(res.data.data);
+    };
+
+    fetchGroupChats();
+  }, []);
+
+  useEffect(() => {
+    const fetchGroupUsers = async () => {
+      const res = await axiosInstance.get("/api/v1/user");
+      const listUsers = res.data.data.listUsers;
+      const listIdContacts = contacts.map((contact) => contact._id);
+      setGroupUsers(
+        listUsers.filter(
+          (user) =>
+            user?._id !== currentUser?._id &&
+            !listIdContacts.includes(user?._id)
+        )
+      );
+    };
+
+    fetchGroupUsers();
+  }, [contacts]);
+
   const changeCurrentUserChat = (index) => {
     setCurrentSelected(index);
     onSelectContact(contacts[index]);
   };
 
-  const getAvatarSource = (avatarImage) => {
-    if (avatarImage.startsWith("PHN")) {
-      return `data:image/svg+xml;base64,${avatarImage}`;
-    }
-    return avatarImage;
+  const handleCreateGroupChat = async () => {
+    if (!groupName.trim()) return;
+    const res = await axiosInstance.post(`api/chat/message/${groupName}`, {
+      groupName: groupName,
+    });
+
+    console.log(res.data.data);
+
+    setGroupChats([...groupChats, res.data.data]);
+    setGroupName("");
+  };
+
+  const handleGroupSelect = (group) => {
+    setSelectedGroup(group);
+    setMessages([]); // Clear previous messages when selecting a new group
+    onSelectContact(group);
+    setCurrentGroupSelected(group.id);
+  };
+
+  const handleAddFriend = async (user) => {
+    await axiosInstance.post(`api/v1/user/add/friends`, {
+      idFriends: [user._id],
+    });
+    setGroupUsers((prev) =>
+      prev.filter((prevUser) => prevUser._id !== user._id)
+    );
+    contacts.push(user);
   };
 
   return (
@@ -38,6 +103,8 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
           </div>
 
           <div className="contacts">
+            <h4 style={{ color: "#fff", textAlign: "left" }}>Friends</h4>
+
             {contacts.length ? (
               contacts.map((contact, index) => {
                 return (
@@ -63,6 +130,72 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
             ) : (
               <div style={{ color: "#fff" }}>No contact available</div>
             )}
+
+            <div className="group-chats">
+              <h4>Group Chats</h4>
+              {groupChats.length > 0 ? (
+                groupChats.map((group) => (
+                  <div
+                    className={`group-chat ${
+                      group.id === currentGroupSelected ? "selected" : ""
+                    }`}
+                    key={group.id}
+                    onClick={() => handleGroupSelect(group)}
+                  >
+                    <div className="group-avatar">
+                      <img
+                        src={getAvatarSource(
+                          group?.users[0]?.avatarImage ||
+                            "https://images.unsplash.com/photo-1732480509151-cb3d991ff9a2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwyMHx8fGVufDB8fHx8fA%3D%3D"
+                        )}
+                        alt={group.groupName}
+                      />
+                    </div>
+                    <div className="group-name">
+                      <h4>{group.groupName}</h4>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div>No group chats available</div>
+              )}
+
+              <div className="create-group">
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="Enter new group name"
+                />
+                <button onClick={handleCreateGroupChat}>Create Group</button>
+              </div>
+            </div>
+
+            <div className="group-users">
+              <h4>List Users</h4>
+              {groupUsers.length ? (
+                groupUsers.map((user) => {
+                  return (
+                    <div className={`user`} key={user._id}>
+                      <div className="avatar">
+                        <img
+                          src={getAvatarSource(user.avatarImage)}
+                          alt={user.username}
+                        />
+                      </div>
+                      <div className="username">
+                        <h4>{user.username}</h4>
+                        <IoMdPersonAdd onClick={() => handleAddFriend(user)} />
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ color: "#fff" }}>
+                  You are friend over users system
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="current-user">
@@ -152,6 +285,124 @@ const StyledContacts = styled.div`
 
     .selected {
       background-color: #9186f3;
+    }
+
+    .group-chats {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      color: #fff;
+
+      .selected {
+        background-color: #9186f3;
+      }
+
+      .group-chat {
+        cursor: pointer;
+        background-color: #ffffff39;
+        min-height: 5rem;
+        width: 90%;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        gap: 1rem;
+        display: flex;
+        align-items: center;
+
+        .group-avatar {
+          width: 3rem;
+          height: 3rem;
+          border-radius: 50%;
+          overflow: hidden;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+
+        .group-name {
+          h4 {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #fff;
+          }
+        }
+      }
+
+      .create-group {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        justify-content: center;
+
+        input {
+          padding: 0.5rem;
+          border-radius: 0.5rem;
+          outline: none;
+          border: none;
+          background-color: #ffffff39;
+          color: #fff;
+        }
+
+        button {
+          padding: 0.5rem 1rem;
+          border-radius: 0.5rem;
+          outline: none;
+          border: none;
+          background-color: #9186f3;
+          color: #fff;
+          cursor: pointer;
+        }
+      }
+    }
+
+    .group-users {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      color: #fff;
+      width: 90%;
+
+      .user {
+        cursor: pointer;
+        background-color: #ffffff39;
+        min-height: 5rem;
+        width: 90%;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        gap: 1rem;
+        display: flex;
+        align-items: center;
+
+        .avatar {
+          width: 3rem;
+          height: 3rem;
+          border-radius: 50%;
+          overflow: hidden;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+
+        .username {
+          h4 {
+            color: #fff;
+          }
+
+          svg {
+            font-size: 1.5rem;
+            cursor: pointer;
+
+            &:hover {
+              color: #9186f3;
+            }
+          }
+        }
+      }
     }
   }
 

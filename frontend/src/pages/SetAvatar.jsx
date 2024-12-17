@@ -32,7 +32,7 @@ export const SetAvatar = () => {
         {
           avatarImage: avatars[selectedAvatar],
           isSet: true,
-          username: user.email.split("@")[0],
+          username: user.username,
         }
       );
 
