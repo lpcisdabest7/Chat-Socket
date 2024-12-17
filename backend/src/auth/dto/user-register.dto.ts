@@ -1,6 +1,7 @@
 import {
   EmailField,
   StringField,
+  StringFieldOptional,
 } from '@libs/utils/decorators/field.decorator';
 
 export class UserRegisterDto {
@@ -9,4 +10,10 @@ export class UserRegisterDto {
 
   @StringField()
   readonly password!: string;
+
+  @StringFieldOptional()
+  firstName: string;
+
+  @StringFieldOptional()
+  lastName: string;
 }

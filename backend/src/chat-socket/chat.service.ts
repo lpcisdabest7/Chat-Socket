@@ -110,6 +110,10 @@ export class ChatService {
     return this.chatRoomModel.find().exec();
   }
 
+  async getAllGroupRooms(): Promise<ChatRoom[]> {
+    return this.chatRoomModel.find({ groupName: { $exists: true } }).exec();
+  }
+
   async findRoomIdByUser(senderId: string, receiverId: string) {
     let room = await this.chatRoomModel.findOne({
       users: {
