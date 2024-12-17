@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import axiosInstance from "../utils";
 import { IoMdPersonAdd } from "react-icons/io";
+import { IoPersonRemove } from "react-icons/io5";
 
 const getAvatarSource = (avatarImage = "") => {
   if (avatarImage.startsWith("PHN")) {
@@ -10,15 +11,20 @@ const getAvatarSource = (avatarImage = "") => {
   return avatarImage;
 };
 
-export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
+export const Contacts = ({
+  contacts,
+  currentUser,
+  onSelectContact,
+  onUpdateContacts,
+}) => {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserAvatar, setCurrentUserAvatar] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
-  const [groupChats, setGroupChats] = useState([]); // State for storing group chats
+  const [groupChats, setGroupChats] = useState([]);
   const [groupName, setGroupName] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState(null); // State to store the selected group
-  const [messages, setMessages] = useState([]); // Messages for the selected group
-  const [newMessage, setNewMessage] = useState(""); // State for the new message input
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
   const [currentGroupSelected, setCurrentGroupSelected] = useState(null);
   const [groupUsers, setGroupUsers] = useState([]);
 
@@ -32,7 +38,6 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
   useEffect(() => {
     const fetchGroupChats = async () => {
       const res = await axiosInstance.get("/api/chat/rooms");
-      console.log(res.data.data);
       setGroupChats(res.data.data);
     };
 
@@ -66,28 +71,35 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
     const res = await axiosInstance.post(`api/chat/message/${groupName}`, {
       groupName: groupName,
     });
-
-    console.log(res.data.data);
-
     setGroupChats([...groupChats, res.data.data]);
     setGroupName("");
   };
 
   const handleGroupSelect = (group) => {
     setSelectedGroup(group);
-    setMessages([]); // Clear previous messages when selecting a new group
+    setMessages([]);
     onSelectContact(group);
     setCurrentGroupSelected(group.id);
   };
 
   const handleAddFriend = async (user) => {
     await axiosInstance.post(`api/v1/user/add/friends`, {
-      idFriends: [user._id],
+      friendIds: [user._id],
     });
     setGroupUsers((prev) =>
       prev.filter((prevUser) => prevUser._id !== user._id)
     );
-    contacts.push(user);
+    onUpdateContacts(user, "add");
+  };
+
+  const handleRemoveFriend = async (user) => {
+    const friendId = user._id;
+    const res = await axiosInstance.delete(`api/v1/user/${friendId}`, {
+      friendId: [user._id],
+    });
+    console.log(res);
+    setGroupUsers((prev) => [...prev, user]);
+    onUpdateContacts(user, "remove");
   };
 
   return (
@@ -96,7 +108,7 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
         <StyledContacts>
           <div className="brand">
             <img
-              src="https://static.vecteezy.com/system/resources/previews/014/664/394/non_2x/chat-bot-symbol-and-logo-icon-vector.jpg"
+              src="https://raw.githubusercontent.com/lpcisdabest7/Chat-Socket/d00f3b28a57809871969d786d1a245582d1a63de/backend/src/image-logo/logo.jpeg"
               alt="logo"
             />
             <h3>TC-Chat</h3>
@@ -112,7 +124,7 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
                     className={`contact ${
                       index === currentSelected ? "selected" : ""
                     }`}
-                    key={index}
+                    key={contact._id} // Use _id as the unique key
                     onClick={() => changeCurrentUserChat(index)}
                   >
                     <div className="avatar">
@@ -123,6 +135,9 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
                     </div>
                     <div className="username">
                       <h4>{contact.username}</h4>
+                      <IoPersonRemove
+                        onClick={() => handleRemoveFriend(contacts[index])}
+                      />
                     </div>
                   </div>
                 );
@@ -137,9 +152,9 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
                 groupChats.map((group) => (
                   <div
                     className={`group-chat ${
-                      group.id === currentGroupSelected ? "selected" : ""
+                      group._id === currentGroupSelected ? "selected" : ""
                     }`}
-                    key={group.id}
+                    key={group._id} // Use group.id as the unique key
                     onClick={() => handleGroupSelect(group)}
                   >
                     <div className="group-avatar">
@@ -280,11 +295,29 @@ const StyledContacts = styled.div`
         h4 {
           color: #fff;
         }
+
+        svg {
+          font-size: 1.3rem;
+          cursor: pointer;
+          color: #fff;
+
+          &:hover {
+            color: #9186f3;
+          }
+        }
       }
     }
 
     .selected {
       background-color: #9186f3;
+
+      .username {
+        svg {
+          &:hover {
+            color: #0d0d30;
+          }
+        }
+      }
     }
 
     .group-chats {

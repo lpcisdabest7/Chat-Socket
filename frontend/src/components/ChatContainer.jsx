@@ -5,7 +5,7 @@ import { ChatInput } from "./ChatInput";
 import axiosInstance from "../utils";
 import { Logout } from "./Logout";
 
-const getAvatarSource = (avatarImage) => {
+const getAvatarSource = (avatarImage = "") => {
   if (avatarImage.startsWith("PHN")) {
     return `data:image/svg+xml;base64,${avatarImage}`;
   }

@@ -56,12 +56,23 @@ export const Chat = () => {
 
   const handleSelectContact = (contact) => {
     console.log(contact);
-    if (contact.members) {
+    if (contact.users) {
       setIsGroupChat(true);
     } else {
       setIsGroupChat(false);
     }
     setCurrentChat(contact);
+  };
+
+  const handleContactsUpdate = (user, action) => {
+    setContacts((prevContacts) => {
+      if (action === "add") {
+        return [...prevContacts, user]; // Add user to contacts
+      } else if (action === "remove") {
+        return prevContacts.filter((contact) => contact._id !== user._id); // Remove user from contacts
+      }
+      return prevContacts;
+    });
   };
 
   return (
@@ -71,6 +82,7 @@ export const Chat = () => {
           contacts={contacts}
           currentUser={currentUser}
           onSelectContact={handleSelectContact}
+          onUpdateContacts={handleContactsUpdate}
         />
         {isLoading && currentChat === undefined ? (
           <Welcome user={currentUser} />
