@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../utils";
 import { useAuth } from "../components/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+
 // Define validation schema with custom error messages
 const schema = yup.object({
   email: yup
@@ -32,15 +33,18 @@ export const Login = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    console.log(data);
     try {
-      const res = await axiosInstance.post("/v1/auth/login", data);
+      const res = await axiosInstance.post("api/v1/auth/login", data);
       if (res.status === 200) {
-        console.log("Login response", res.data.data);
         const token = res.data?.data?.token?.accessToken;
+        console.log(token);
         if (token) {
           login(token);
-          navigate("/");
+          if (!res.data.data.user.isSet) {
+            navigate("/set-avatar");
+          } else {
+            navigate("/");
+          }
         }
       }
     } catch (error) {
@@ -51,7 +55,7 @@ export const Login = () => {
   const handleGoogleLogin = async (response) => {
     console.log(response);
     try {
-      const res = await axiosInstance.post("/v1/auth/google/login", {
+      const res = await axiosInstance.post("api/v1/auth/google/login", {
         idToken: response.credential,
       });
       console.log(res);
@@ -67,6 +71,11 @@ export const Login = () => {
     } catch (error) {
       console.error("Google login error", error);
     }
+  };
+
+  const handleFacebookLogin = async (event) => {
+    event.preventDefault();
+    console.log("Facebook login triggered");
   };
 
   return (
@@ -107,21 +116,23 @@ export const Login = () => {
         <hr />
         <p>Or signup with</p>
 
+        {/* Google Login Button */}
         <GoogleLogin
           onSuccess={handleGoogleLogin}
-          onError={(errors) =>
-            console.log("Error during login with google", errors)
-          }
+          onError={(error) => console.log("Google login error", error)}
         >
-          <button className="button-group">
+          <button className="button-group" type="button">
             <i className="fa-brands fa-google" style={{ color: "#f54242" }}></i>
             <p style={{ color: "#26292b" }}>Login with Google</p>
           </button>
         </GoogleLogin>
+
+        {/* Facebook Login Button */}
         <button
           className="button-group"
           style={{ backgroundColor: "#4257f5" }}
-          onClick={handleGoogleLogin}
+          onClick={handleFacebookLogin}
+          type="button"
         >
           <i className="fa-brands fa-facebook" style={{ color: "#fff" }}></i>
           <p style={{ color: "#fff" }}>Login with Facebook</p>

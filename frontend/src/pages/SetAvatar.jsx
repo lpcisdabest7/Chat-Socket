@@ -6,6 +6,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import loader from "../assets/loader.gif";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../utils";
 
 export const SetAvatar = () => {
   const [avatars, setAvatars] = useState([]);
@@ -26,18 +27,21 @@ export const SetAvatar = () => {
     } else {
       toast.success("Profile picture updated!", toastOptions);
       const user = await JSON.parse(localStorage.getItem("chat-app-user"));
-      const { data } = await axios.post(
-        `http://localhost:3000/api/users/${user._id}`,
+      const { data } = await axiosInstance.patch(
+        `api/v1/user/update-profile/${user._id}`,
         {
-          image: avatars[selectedAvatar],
+          avatarImage: avatars[selectedAvatar],
+          isSet: true,
+          username: user.email.split("@")[0],
         }
       );
 
       console.log(data);
 
-      if (data.isSet) {
+      if (data.data.isSet) {
         user.isSetAvatarImage = true;
-        user.avatarImage = data.image;
+        user.avatarImage = data.data.avatarImage;
+        user.username = data.data.username;
         localStorage.setItem("chat-app-user", JSON.stringify(user));
         navigate("/");
       } else {

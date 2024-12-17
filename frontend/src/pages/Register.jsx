@@ -38,7 +38,7 @@ export const Register = () => {
   const onSubmit = async (data) => {
     console.log(data);
     try {
-      const res = await axiosInstance.post("/v1/auth/register", data);
+      const res = await axiosInstance.post("api/v1/auth/register", data);
       if (res.status === 200) {
         console.log("Register response", res.data.data);
         navigate("/login");
@@ -51,7 +51,7 @@ export const Register = () => {
   const handleGoogleLogin = async (response) => {
     console.log(response);
     try {
-      const res = await axiosInstance.post("/v1/auth/google/login", {
+      const res = await axiosInstance.post("api/v1/auth/google/login", {
         idToken: response.credential,
       });
       console.log(res);
@@ -131,12 +131,16 @@ export const Register = () => {
           onSuccess={handleGoogleLogin}
           onError={(error) => console.log("Google login failed", error)}
         >
-          <button className="button-group">
+          <button className="button-group" type="button">
             <i className="fa-brands fa-google" style={{ color: "#f54242" }}></i>
             <p style={{ color: "#26292b" }}>Login with Google</p>
           </button>
         </GoogleLogin>
-        <button className="button-group" style={{ backgroundColor: "#4257f5" }}>
+        <button
+          className="button-group"
+          style={{ backgroundColor: "#4257f5" }}
+          type="button"
+        >
           <i className="fa-brands fa-facebook" style={{ color: "#fff" }}></i>
           <p style={{ color: "#fff" }}>Login with Facebook</p>
         </button>
