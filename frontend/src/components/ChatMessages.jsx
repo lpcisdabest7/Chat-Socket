@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 
 export const ChatMessages = ({ messages, currentUser }) => {
+  console.log("MESS", messages);
   const sortedMessages = messages.sort(
     (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   );

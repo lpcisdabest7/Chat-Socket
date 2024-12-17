@@ -14,22 +14,33 @@ const getAvatarSource = (avatarImage) => {
 
 export const ChatContainer = ({ currentChat, currentUser, socket }) => {
   const [messages, setMessages] = useState([]);
+  const [roomID, setRoomID] = useState("");
   console.log("CURRENT CHAT", currentChat);
   console.log("CURRENT USER", currentUser);
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const res = await axiosInstance.post("/api/chat/room");
+      const res = await axiosInstance.post(
+        `/api/chat/messages/${currentUser._id}/${currentChat._id}`,
+        {
+          senderId: currentUser._id,
+          receiverId: currentChat._id,
+        }
+      );
+
       console.log(res);
+      if (res.data.data._id) {
+        setRoomID(res.data.data._id);
+      }
       const response = await axiosInstance.get(
-        `/api/chat/private-messages/${res.data.data._id}`
+        `/api/chat/messages/${res.data.data._id}`
       );
       console.log(response);
-      setMessages(response.data.data.listMessagesPrivate);
+      setMessages(response.data.data.results);
     };
 
     fetchMessages();
-  }, [currentChat]);
+  }, [currentChat, roomID]);
 
   const handleSendChat = async (message) => {
     console.log(message, "SENDING MESSAGE");
@@ -38,6 +49,7 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
       senderId: currentUser._id,
       receiverId: currentChat._id,
       content: message,
+      roomId: roomID,
     });
 
     const newMessage = {
@@ -47,6 +59,7 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isPrivate: true,
+      roomId: roomID,
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
   };
@@ -56,7 +69,10 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
       socket.current.on("privateMessage", (data) => {
         console.log("New message received via socket:", data);
 
-        setMessages((prevMessages) => [...prevMessages, data]);
+        setMessages((prevMessages) => {
+          // Kiểm tra dữ liệu trước khi cập nhật
+          return [...prevMessages, data]; // Thêm tin nhắn mới vào cuối danh sách
+        });
       });
     }
 
@@ -65,7 +81,7 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
         socket.current.off("privateMessage");
       }
     };
-  }, [socket, currentChat, currentUser]);
+  }, [currentChat]);
 
   return (
     <div className="chat-container" style={{ display: "flex", width: "100%" }}>
