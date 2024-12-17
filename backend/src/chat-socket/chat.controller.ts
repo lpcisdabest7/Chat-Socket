@@ -49,6 +49,11 @@ export class ChatController {
   async getAllRooms(): Promise<ChatRoom[]> {
     return this.chatService.getAllRooms();
   }
+
+  @Get('message/group')
+  async getAllGroupRooms(): Promise<ChatRoom[]> {
+    return this.chatService.getAllGroupRooms();
+  }
   // chat group
   @Post('group-message')
   async createMessage(
