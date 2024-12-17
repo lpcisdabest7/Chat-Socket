@@ -25,16 +25,23 @@ export class UserService {
   }
 
   async createUser(userRegisterDto: UserRegisterDto) {
-    const existUser = await this.userModel.findOne({
-      email: userRegisterDto.email,
-    });
-    if (existUser) {
-      throw new ApiException('Email already exist', HttpStatus.CONFLICT);
+    const { email, password, firstName, lastName } = userRegisterDto;
+
+    const existingUser = await this.userModel.findOne({ email });
+    if (existingUser) {
+      throw new ApiException('Email already exists', HttpStatus.CONFLICT);
     }
-    const user = await this.userModel.create({
+
+    const hashedPassword = generateHash(password);
+
+    const newUser = {
       ...userRegisterDto,
-      password: generateHash(userRegisterDto.password),
-    });
+      password: hashedPassword,
+      username: `${firstName} ${lastName}`,
+    };
+
+    const user = await this.userModel.create(newUser);
+
     return user;
   }
 

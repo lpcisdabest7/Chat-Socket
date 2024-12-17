@@ -34,12 +34,6 @@ export class AuthController {
   async userLogin(@Body() userLoginDto: UserLoginDto) {
     const user = await this.authService.validateUser(userLoginDto);
 
-
-
-
-
-
-    
     const token = await this.tokenService.createToken({
       userId: user.id,
       role: user.role,
