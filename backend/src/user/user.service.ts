@@ -133,9 +133,9 @@ export class UserService {
   }
 
   async addFriends(userId: string, dto: AddFriendDto) {
-    const { idFriends } = dto;
+    const { friendIds } = dto;
 
-    if (!idFriends || (Array.isArray(idFriends) && idFriends.length === 0)) {
+    if (!friendIds || (Array.isArray(friendIds) && friendIds.length === 0)) {
       throw new ApiException(
         'No friends provided to add',
         HttpStatus.BAD_REQUEST,
@@ -152,7 +152,7 @@ export class UserService {
       );
     }
 
-    const userIds = Array.isArray(idFriends) ? idFriends : [idFriends];
+    const userIds = Array.isArray(friendIds) ? friendIds : [friendIds];
     const objectIds = userIds.map((id) => {
       if (!Types.ObjectId.isValid(id)) {
         throw new ApiException(
