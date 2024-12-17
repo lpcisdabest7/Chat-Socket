@@ -55,8 +55,6 @@ export class ChatService {
   }
 
   async joinRoom(joinRoomDto: JoinRoomDto): Promise<ChatRoom> {
-    console.log('Join Room DTO:', joinRoomDto);
-
     // Step 1: Find the user by userId
     const user = await this.userModel.findById(joinRoomDto.userId);
 

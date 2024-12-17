@@ -76,7 +76,6 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
   // Set up socket listener for real-time messages
   useEffect(() => {
     if (socket && currentChat && isMounted.current) {
-      console.log("Joining room", roomID);
       socket.emit("joinRoom", {
         roomId: roomID,
         userId: currentUser._id,

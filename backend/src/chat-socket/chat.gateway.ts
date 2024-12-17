@@ -34,9 +34,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleCreateMessage(client: Socket, payload: CreateMessageDto) {
     try {
       const message = await this.chatService.createMessage(payload);
-      console.log(
-        `Message created: ${message.content}, Room: ${payload.roomId}`,
-      );
+
       this.server.to(payload.roomId).emit('groupMessage', {
         content: message.content,
         userId: payload.userId,
@@ -51,7 +49,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleJoinRoom(client: Socket, payload: JoinRoomDto) {
     try {
       const room = await this.chatService.joinRoom(payload);
-      console.log(`Client ${client.id} joining room ${payload.roomId}`);
       client.join(payload.roomId);
 
       // Notify others in the room
@@ -60,7 +57,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         roomId: payload.roomId,
       });
 
-      console.log(`User ${payload.userId} joined room ${payload.roomId}`);
       return room;
     } catch (error) {
       console.error('Error joining room:', error);
@@ -71,7 +67,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleLeaveRoom(client: Socket, payload: JoinRoomDto) {
     try {
       const room = await this.chatService.leaveRoom(payload);
-      console.log(`Client ${client.id} leaving room ${payload.roomId}`);
       client.leave(payload.roomId);
 
       // Notify others in the room
@@ -80,7 +75,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         roomId: payload.roomId,
       });
 
-      console.log(`User ${payload.userId} left room ${payload.roomId}`);
       return room;
     } catch (error) {
       console.error('Error leaving room:', error);
@@ -94,9 +88,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const message = await this.chatService.createPrivateMessage(payload);
-      console.log(`Emitting private message to room ${message.roomId}`);
       // Ensure roomId is correct (could be an ObjectId or string)
-      console.log(`Room ID for private message: ${message.roomId.toString()}`);
       this.server.to(message.roomId.toString()).emit('privateMessage', message);
 
       return message;
