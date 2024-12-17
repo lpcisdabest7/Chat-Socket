@@ -164,12 +164,24 @@ export class UserService {
       return new Types.ObjectId(id);
     });
 
+    // Cập nhật bạn bè cho user
     const updatedUser = await this.userModel.findByIdAndUpdate(
       user.id,
       {
         $addToSet: { friends: { $each: objectIds } },
       },
       { new: true },
+    );
+
+    // Cập nhật userId vào danh sách bạn bè của từng bạn
+    await Promise.all(
+      objectIds.map((friendId) =>
+        this.userModel.findByIdAndUpdate(
+          friendId,
+          { $addToSet: { friends: new Types.ObjectId(userId) } },
+          { new: true },
+        ),
+      ),
     );
 
     return updatedUser;
@@ -195,5 +207,12 @@ export class UserService {
       hasNextPage: page < totalPages,
       hasPreviousPage: page > 1,
     };
+  }
+
+  async removeFriend(user: User, friendId: string) {
+    await this.userModel.updateOne(
+      { _id: user },
+      { $pull: { friends: new Types.ObjectId(friendId) } },
+    );
   }
 }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -55,5 +56,15 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return await this.userService.updateProfileUser(userId, updateUserDto);
+  }
+
+  @Delete('/:friendId')
+  @Auth()
+  @HttpCode(HttpStatus.OK)
+  async removeFriend(
+    @AuthUser() user: User,
+    @Param('friendId') friendId: string,
+  ) {
+    return await this.userService.removeFriend(user, friendId);
   }
 }
