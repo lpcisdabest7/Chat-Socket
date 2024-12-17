@@ -7,9 +7,10 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
-import { CreateMessageDto } from './dto/create-message.dto';
+import { CreateGroupMessageDto } from './dto/create-message-group.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
+import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
@@ -17,23 +18,25 @@ import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private readonly logger = new Logger(ChatGateway.name);
+
   @WebSocketServer()
   server: Server;
 
   constructor(private readonly chatService: ChatService) {}
 
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    this.logger.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
+    this.logger.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('sendGroupMessage')
-  async handleCreateMessage(client: Socket, payload: CreateMessageDto) {
+  async handleCreateMessage(client: Socket, payload: CreateGroupMessageDto) {
     try {
-      const message = await this.chatService.createMessage(payload);
+      const message = await this.chatService.createGroupMessage(payload);
 
       this.server.to(payload.roomId).emit('groupMessage', {
         content: message.content,
@@ -41,7 +44,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       return message;
     } catch (error) {
-      console.error('Error creating message:', error);
+      this.logger.error('Error creating message:', error);
     }
   }
 
@@ -59,7 +62,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return room;
     } catch (error) {
-      console.error('Error joining room:', error);
+      this.logger.error('Error joining room:', error);
     }
   }
 
@@ -77,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return room;
     } catch (error) {
-      console.error('Error leaving room:', error);
+      this.logger.error('Error leaving room:', error);
     }
   }
 
@@ -93,7 +96,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return message;
     } catch (error) {
-      console.error('Error sending private message:', error);
+      this.logger.error('Error sending private message:', error);
     }
   }
 }

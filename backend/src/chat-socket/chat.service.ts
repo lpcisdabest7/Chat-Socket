@@ -1,8 +1,7 @@
 // src/chat/chat.service.ts
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { Message } from './model/message.model';
 import { ChatRoom } from './model/chatroom.model';
 import { JoinRoomDto } from './dto/join-room.dto';
@@ -11,32 +10,37 @@ import { ApiException } from '@libs/utils/exception';
 import { User } from '@app/user/user.schema';
 import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
 import { PaginationDto } from './dto-message/pagination.dto';
+import { CreateGroupMessageDto } from './dto/create-message-group.dto';
 
 @Injectable()
 export class ChatService {
+  private readonly logger = new Logger(ChatService.name);
+
   constructor(
     @InjectModel(Message.name) private messageModel: Model<Message>,
     @InjectModel(ChatRoom.name) private chatRoomModel: Model<ChatRoom>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
-  async createMessage(createMessageDto: CreateMessageDto): Promise<Message> {
-    const publicMessage = new this.messageModel({
-      userId: createMessageDto.userId
-        ? new Types.ObjectId(createMessageDto.userId)
+  async createGroupMessage(
+    createGroupMessageDto: CreateGroupMessageDto,
+  ): Promise<Message> {
+    const groupMessage = new this.messageModel({
+      userId: createGroupMessageDto.userId
+        ? new Types.ObjectId(createGroupMessageDto.userId)
         : null,
-      content: createMessageDto.content,
-      roomId: createMessageDto.roomId
-        ? new Types.ObjectId(createMessageDto.roomId)
+      content: createGroupMessageDto.content,
+      roomId: createGroupMessageDto.roomId
+        ? new Types.ObjectId(createGroupMessageDto.roomId)
         : null,
     });
-    if (createMessageDto.roomId) {
-      await this.chatRoomModel.findByIdAndUpdate(createMessageDto.roomId, {
-        $push: { messages: publicMessage._id },
+    if (createGroupMessageDto.roomId) {
+      await this.chatRoomModel.findByIdAndUpdate(createGroupMessageDto.roomId, {
+        $push: { messages: groupMessage._id },
       });
     }
 
-    return publicMessage.save();
+    return groupMessage.save();
   }
 
   async getAllMessages(): Promise<Message[]> {
@@ -49,9 +53,10 @@ export class ChatService {
       .exec();
   }
 
-  async createRoom(): Promise<ChatRoom> {
+  async createRoom(groupName: string): Promise<ChatRoom> {
     const room = new this.chatRoomModel();
-    return room.save();
+    room.groupName = groupName;
+    return await room.save();
   }
 
   async joinRoom(joinRoomDto: JoinRoomDto): Promise<ChatRoom> {
@@ -157,51 +162,6 @@ export class ChatService {
     });
 
     return await privateMessage.save();
-  }
-
-  async getPrivateMessages(
-    senderId: string,
-    receiverId: string,
-    paginationDto: PaginationDto,
-  ) {
-    const { cursor, limit } = paginationDto;
-
-    const query: Record<string, any> = {
-      isPrivate: true,
-      $or: [
-        {
-          userId: new Types.ObjectId(senderId),
-          receiverId: new Types.ObjectId(receiverId),
-        },
-        {
-          userId: new Types.ObjectId(receiverId),
-          receiverId: new Types.ObjectId(senderId),
-        },
-      ],
-      ...(cursor && { _id: { $lte: new Types.ObjectId(cursor) } }),
-    };
-
-    const listMessagesPrivate = await this.messageModel
-      .find(query)
-      .populate({ path: 'userId', select: 'username avatarImage' })
-      .sort({ _id: -1 })
-      .limit(limit + 1)
-      .exec();
-
-    const hasNextPage = listMessagesPrivate.length > limit;
-    const nextCursor = hasNextPage
-      ? listMessagesPrivate[listMessagesPrivate.length - 1]._id
-      : null;
-
-    if (hasNextPage) {
-      listMessagesPrivate.pop();
-    }
-
-    return {
-      listMessagesPrivate,
-      nextCursor,
-      hasNextPage,
-    };
   }
 
   async getAllMessagesByRoomId(roomId: string, paginationDto: PaginationDto) {

@@ -11,7 +11,7 @@ export const Welcome = ({ user }) => {
 
       <div className="welcome-content">
         <h1>
-          Welcome to Hoodoo Chat App, <span>{user?.username}</span>!
+          Welcome to TC-Chat Chat App, <span>{user?.username}</span>!
         </h1>
         <p>Please select a chat to Start Messaging</p>
       </div>

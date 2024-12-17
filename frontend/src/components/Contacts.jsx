@@ -34,7 +34,7 @@ export const Contacts = ({ contacts, currentUser, onSelectContact }) => {
               src="https://static.vecteezy.com/system/resources/previews/014/664/394/non_2x/chat-bot-symbol-and-logo-icon-vector.jpg"
               alt="logo"
             />
-            <h3>Hoodoo</h3>
+            <h3>TC-Chat</h3>
           </div>
 
           <div className="contacts">

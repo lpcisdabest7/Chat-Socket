@@ -1,7 +1,7 @@
 // src/chat/chat.controller.ts
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { CreateMessageDto } from './dto/create-message.dto';
+import { CreateGroupMessageDto } from './dto/create-message-group.dto';
 import { Message } from './model/message.model';
 import { ChatRoom } from './model/chatroom.model';
 import { JoinRoomDto } from './dto/join-room.dto';
@@ -30,9 +30,9 @@ export class ChatController {
     return this.chatService.findRoomIdByUser(senderId, receiverId);
   }
 
-  @Post('room')
-  async createRoom(): Promise<ChatRoom> {
-    return this.chatService.createRoom();
+  @Post('message/:groupName')
+  async createRoom(@Param('groupName') groupName: string): Promise<ChatRoom> {
+    return this.chatService.createRoom(groupName);
   }
 
   @Post('room/join')
@@ -52,9 +52,9 @@ export class ChatController {
   // chat group
   @Post('group-message')
   async createMessage(
-    @Body() createMessageDto: CreateMessageDto,
+    @Body() createGroupMessageDto: CreateGroupMessageDto,
   ): Promise<Message> {
-    return this.chatService.createMessage(createMessageDto);
+    return this.chatService.createGroupMessage(createGroupMessageDto);
   }
 
   //chat 1 vs 1
