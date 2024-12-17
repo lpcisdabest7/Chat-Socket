@@ -13,6 +13,6 @@ export class CreatePrivateMessageDto {
   @StringField()
   content?: string;
 
-  @StringFieldOptional()
-  roomId?: string;
+  @StringField()
+  roomId: string;
 }

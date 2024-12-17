@@ -7,7 +7,6 @@ import { ChatRoom } from './model/chatroom.model';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
-import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
 import { PaginationDto } from './dto-message/pagination.dto';
 
 @ApiTags('Socket')
@@ -21,6 +20,14 @@ export class ChatController {
     @Query() paginationDto: PaginationDto,
   ) {
     return this.chatService.getAllMessagesByRoomId(roomId, paginationDto);
+  }
+
+  @Post('messages/:senderId/:receiverId')
+  async findRoomIdByUser(
+    @Param('senderId') senderId: string,
+    @Param('receiverId') receiverId: string,
+  ) {
+    return this.chatService.findRoomIdByUser(senderId, receiverId);
   }
 
   @Post('room')
@@ -57,17 +64,4 @@ export class ChatController {
   ): Promise<Message> {
     return this.chatService.createPrivateMessage(createPrivateMessageDto);
   }
-
-  // @Get('private-messages/:senderId/:receiverId')
-  // async getPrivateMessages(
-  //   @Query() paginationDto: PaginationDto,
-  //   @Param('senderId') senderId: string,
-  //   @Param('receiverId') receiverId: string,
-  // ) {
-  //   return this.chatService.getPrivateMessages(
-  //     senderId,
-  //     receiverId,
-  //     paginationDto,
-  //   );
-  // }
 }

@@ -82,6 +82,20 @@ export class ChatService {
     return this.chatRoomModel.find().exec();
   }
 
+  async findRoomIdByUser(senderId: string, receiverId: string) {
+    let room = await this.chatRoomModel.findOne({
+      users: {
+        $all: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
+      },
+    });
+    if (!room) {
+      room = await this.chatRoomModel.create({
+        users: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
+      });
+    }
+    return room;
+  }
+
   //chat with 1 vs 1
   async createPrivateMessage(createPrivateMessageDto: CreatePrivateMessageDto) {
     const sender = await this.userModel.findById(
@@ -97,25 +111,20 @@ export class ChatService {
       throw new ApiException('Receiver not found', HttpStatus.BAD_REQUEST);
     }
 
-    if (!createPrivateMessageDto.roomId) {
-      const room: ChatRoom = await this.createRoom();
-      createPrivateMessageDto.roomId = room._id.toString();
+    const room = await this.chatRoomModel.findOne({
+      _id: new Types.ObjectId(createPrivateMessageDto.roomId),
+      users: {
+        $all: [
+          new Types.ObjectId(createPrivateMessageDto.senderId),
+          new Types.ObjectId(createPrivateMessageDto.receiverId),
+        ],
+      },
+    });
+
+    if (!room) {
+      throw new ApiException('Bad Request', HttpStatus.BAD_REQUEST);
     }
 
-    await this.chatRoomModel.findByIdAndUpdate(
-      createPrivateMessageDto.roomId,
-      {
-        $addToSet: {
-          users: {
-            $each: [
-              new Types.ObjectId(createPrivateMessageDto.senderId),
-              new Types.ObjectId(createPrivateMessageDto.receiverId),
-            ],
-          },
-        },
-      },
-      { new: true },
-    );
     const privateMessage = new this.messageModel({
       userId: new Types.ObjectId(createPrivateMessageDto.senderId),
       receiverId: new Types.ObjectId(createPrivateMessageDto.receiverId),
@@ -125,48 +134,6 @@ export class ChatService {
     });
 
     return await privateMessage.save();
-  }
-
-  async getPrivateMessages1(
-    senderId: string,
-    receiverId: string,
-    paginationDto: PagingOffsetDto,
-  ) {
-    const { page, limit } = paginationDto;
-    const skip = (page - 1) * limit;
-    const listMessagesPrivate = await this.messageModel
-      .find({
-        $or: [
-          {
-            userId: new Types.ObjectId(senderId),
-            receiverId: new Types.ObjectId(receiverId),
-            isPrivate: true,
-          },
-          {
-            userId: new Types.ObjectId(receiverId),
-            receiverId: new Types.ObjectId(senderId),
-            isPrivate: true,
-          },
-        ],
-      })
-      .populate({ path: 'userId', select: 'username avatarImage' })
-      .sort({ updatedAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
-    const totalRecords = await this.userModel.countDocuments(
-      listMessagesPrivate,
-    );
-
-    const totalPages = Math.ceil(totalRecords / limit);
-
-    return {
-      listMessagePrivate: listMessagesPrivate,
-      currentPage: page,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    };
   }
 
   async getPrivateMessages(
