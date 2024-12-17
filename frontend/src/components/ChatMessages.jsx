@@ -1,8 +1,18 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
 
 export const ChatMessages = ({ messages, currentUser }) => {
-  console.log("MESS", messages);
+  // Create a ref for the chat container
+  const messagesEndRef = useRef(null);
+
+  // Scroll to the bottom whenever the messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]); // Re-run this effect when the messages array changes
+
+  // Sort messages by createdAt
   const sortedMessages = messages.sort(
     (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   );
@@ -10,20 +20,20 @@ export const ChatMessages = ({ messages, currentUser }) => {
   return (
     <StyledChatMessages>
       {sortedMessages.length > 0 &&
-        sortedMessages.map((message, index) => {
-          return (
-            <div
-              key={index}
-              className={`message ${
-                currentUser._id === message.receiverId ? "receiver" : "sender"
-              }`}
-            >
-              <div className="message-content">
-                <p>{message.content}</p>
-              </div>
+        sortedMessages.map((message, index) => (
+          <div
+            key={index}
+            className={`message ${
+              currentUser._id === message.receiverId ? "receiver" : "sender"
+            }`}
+          >
+            <div className="message-content">
+              <p>{message.content}</p>
             </div>
-          );
-        })}
+          </div>
+        ))}
+      {/* Add a div to scroll to */}
+      <div ref={messagesEndRef} />
     </StyledChatMessages>
   );
 };
