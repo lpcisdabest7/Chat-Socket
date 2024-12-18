@@ -36,7 +36,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('sendGroupMessage')
   async handleCreateMessage(client: Socket, payload: CreateGroupMessageDto) {
     try {
-      const message = await this.chatService.createGroupMessage(payload);
+      const message = await this.chatService.chatGroupMessage(payload);
 
       this.server.to(payload.roomId).emit('groupMessage', {
         content: message.content,
@@ -53,7 +53,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const room = await this.chatService.joinRoom(payload);
       client.join(payload.roomId);
-      console.log(payload);
 
       // Notify others in the room
       this.server.to(payload.roomId).emit('userJoined', {
@@ -91,7 +90,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     payload: CreatePrivateMessageDto,
   ) {
     try {
-      const message = await this.chatService.createPrivateMessage(payload);
+      const message = await this.chatService.chatPrivateMessage(payload);
 
       this.server.to(message.roomId.toString()).emit('privateMessage', message);
 

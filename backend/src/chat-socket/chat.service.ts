@@ -3,7 +3,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Message } from './model/message.model';
-import { Room } from './model/chatroom.model';
+import { Room } from './model/room.model';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 import { ApiException } from '@libs/utils/exception';
@@ -19,11 +19,11 @@ export class ChatService {
 
   constructor(
     @InjectModel(Message.name) private messageModel: Model<Message>,
-    @InjectModel(Room.name) private chatRoomModel: Model<Room>,
+    @InjectModel(Room.name) private roomModel: Model<Room>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
-  async createGroupMessage(
+  async chatGroupMessage(
     createGroupMessageDto: CreateGroupMessageDto,
   ): Promise<Message> {
     const groupMessage = new this.messageModel({
@@ -35,11 +35,6 @@ export class ChatService {
         ? new Types.ObjectId(createGroupMessageDto.roomId)
         : null,
     });
-    if (createGroupMessageDto.roomId) {
-      await this.chatRoomModel.findByIdAndUpdate(createGroupMessageDto.roomId, {
-        $push: { messages: groupMessage._id },
-      });
-    }
 
     return groupMessage.save();
   }
@@ -54,8 +49,8 @@ export class ChatService {
       .exec();
   }
 
-  async createRoom(groupName: string): Promise<Room> {
-    const room = new this.chatRoomModel();
+  async createGroupMessage(groupName: string): Promise<Room> {
+    const room = new this.roomModel();
     room.groupName = groupName;
     room.role = RoleRoom.GroupRoom;
     return await room.save();
@@ -71,14 +66,14 @@ export class ChatService {
     }
 
     // Step 2: Check if the room exists
-    const room = await this.chatRoomModel.findById(joinRoomDto.roomId);
+    const room = await this.roomModel.findById(joinRoomDto.roomId);
     if (!room) {
       // If room not found, throw an ApiException with a NOT_FOUND error
       throw new ApiException('Chat room not found', HttpStatus.NOT_FOUND);
     }
 
     // Step 3: Add the user to the room (avoid duplicates)
-    const updatedRoom = await this.chatRoomModel
+    const updatedRoom = await this.roomModel
       .findByIdAndUpdate(
         joinRoomDto.roomId,
         { $addToSet: { members: new Types.ObjectId(joinRoomDto.userId) } },
@@ -99,7 +94,7 @@ export class ChatService {
   }
 
   async leaveRoom(joinRoomDto: JoinRoomDto): Promise<Room> {
-    return this.chatRoomModel
+    return this.roomModel
       .findByIdAndUpdate(
         joinRoomDto.roomId,
         { $pull: { members: new Types.ObjectId(joinRoomDto.userId) } },
@@ -109,22 +104,22 @@ export class ChatService {
   }
 
   async getAllRooms(): Promise<Room[]> {
-    return this.chatRoomModel.find().exec();
+    return this.roomModel.find().exec();
   }
 
   async getAllGroupRooms(): Promise<Room[]> {
-    return this.chatRoomModel.find({ groupName: { $exists: true } }).exec();
+    return this.roomModel.find({ groupName: { $exists: true } }).exec();
   }
 
-  async findRoomIdByUser(senderId: string, receiverId: string) {
-    let room = await this.chatRoomModel.findOne({
+  async createPrivateMessage(senderId: string, receiverId: string) {
+    let room = await this.roomModel.findOne({
       members: {
         $all: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
       },
       role: RoleRoom.PrivateRoom,
     });
     if (!room) {
-      room = await this.chatRoomModel.create({
+      room = await this.roomModel.create({
         members: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
         role: RoleRoom.PrivateRoom,
       });
@@ -133,7 +128,7 @@ export class ChatService {
   }
 
   //chat with 1 vs 1
-  async createPrivateMessage(createPrivateMessageDto: CreatePrivateMessageDto) {
+  async chatPrivateMessage(createPrivateMessageDto: CreatePrivateMessageDto) {
     const sender = await this.userModel.findById(
       createPrivateMessageDto.senderId,
     );
@@ -147,7 +142,7 @@ export class ChatService {
       throw new ApiException('Receiver not found', HttpStatus.BAD_REQUEST);
     }
 
-    const room = await this.chatRoomModel.findOne({
+    const room = await this.roomModel.findOne({
       _id: new Types.ObjectId(createPrivateMessageDto.roomId),
       members: {
         $all: [

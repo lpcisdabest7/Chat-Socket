@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { Message, MessageSchema } from './model/message.model';
-import { Room, RoomSchema } from './model/chatroom.model';
+import { Room, RoomSchema } from './model/room.model';
 import { ChatGateway } from './chat.gateway';
 import { User, UserSchema } from '@app/user/user.schema';
 // import { ChatGateway } from './chat.gateway';
