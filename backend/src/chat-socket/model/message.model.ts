@@ -12,7 +12,7 @@ export class Message extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   receiverId?: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'ChatRoom' })
+  @Prop({ type: Types.ObjectId, ref: 'Room' })
   roomId: Types.ObjectId;
 
   @Prop({ default: false })

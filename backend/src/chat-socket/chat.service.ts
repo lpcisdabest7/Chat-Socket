@@ -3,7 +3,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Message } from './model/message.model';
-import { ChatRoom } from './model/chatroom.model';
+import { Room } from './model/chatroom.model';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { CreatePrivateMessageDto } from './dto/create-message-1vs1.dto';
 import { ApiException } from '@libs/utils/exception';
@@ -19,7 +19,7 @@ export class ChatService {
 
   constructor(
     @InjectModel(Message.name) private messageModel: Model<Message>,
-    @InjectModel(ChatRoom.name) private chatRoomModel: Model<ChatRoom>,
+    @InjectModel(Room.name) private chatRoomModel: Model<Room>,
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
@@ -54,14 +54,14 @@ export class ChatService {
       .exec();
   }
 
-  async createRoom(groupName: string): Promise<ChatRoom> {
+  async createRoom(groupName: string): Promise<Room> {
     const room = new this.chatRoomModel();
     room.groupName = groupName;
     room.role = RoleRoom.GroupRoom;
     return await room.save();
   }
 
-  async joinRoom(joinRoomDto: JoinRoomDto): Promise<ChatRoom> {
+  async joinRoom(joinRoomDto: JoinRoomDto): Promise<Room> {
     // Step 1: Find the user by userId
     const user = await this.userModel.findById(joinRoomDto.userId);
 
@@ -81,7 +81,7 @@ export class ChatService {
     const updatedRoom = await this.chatRoomModel
       .findByIdAndUpdate(
         joinRoomDto.roomId,
-        { $addToSet: { users: new Types.ObjectId(joinRoomDto.userId) } },
+        { $addToSet: { members: new Types.ObjectId(joinRoomDto.userId) } },
         { new: true }, // Return the updated room after the operation
       )
       .exec();
@@ -98,34 +98,34 @@ export class ChatService {
     return updatedRoom;
   }
 
-  async leaveRoom(joinRoomDto: JoinRoomDto): Promise<ChatRoom> {
+  async leaveRoom(joinRoomDto: JoinRoomDto): Promise<Room> {
     return this.chatRoomModel
       .findByIdAndUpdate(
         joinRoomDto.roomId,
-        { $pull: { users: new Types.ObjectId(joinRoomDto.userId) } },
+        { $pull: { members: new Types.ObjectId(joinRoomDto.userId) } },
         { new: true },
       )
       .exec();
   }
 
-  async getAllRooms(): Promise<ChatRoom[]> {
+  async getAllRooms(): Promise<Room[]> {
     return this.chatRoomModel.find().exec();
   }
 
-  async getAllGroupRooms(): Promise<ChatRoom[]> {
+  async getAllGroupRooms(): Promise<Room[]> {
     return this.chatRoomModel.find({ groupName: { $exists: true } }).exec();
   }
 
   async findRoomIdByUser(senderId: string, receiverId: string) {
     let room = await this.chatRoomModel.findOne({
-      users: {
+      members: {
         $all: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
       },
       role: RoleRoom.PrivateRoom,
     });
     if (!room) {
       room = await this.chatRoomModel.create({
-        users: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
+        members: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
         role: RoleRoom.PrivateRoom,
       });
     }
@@ -149,7 +149,7 @@ export class ChatService {
 
     const room = await this.chatRoomModel.findOne({
       _id: new Types.ObjectId(createPrivateMessageDto.roomId),
-      users: {
+      members: {
         $all: [
           new Types.ObjectId(createPrivateMessageDto.senderId),
           new Types.ObjectId(createPrivateMessageDto.receiverId),
