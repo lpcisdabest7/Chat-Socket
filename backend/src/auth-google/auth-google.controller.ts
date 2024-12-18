@@ -4,7 +4,7 @@ import { AuthService } from '../auth/auth.service';
 import { AuthGoogleService } from './auth-google.service';
 import { AuthGoogleLoginDto } from './dto/auth-google-login.dto';
 
-@ApiTags('Auth')
+@ApiTags('auth')
 @Controller({
   path: 'auth/google',
   version: '1',

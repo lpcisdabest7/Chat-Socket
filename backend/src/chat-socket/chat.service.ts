@@ -26,14 +26,26 @@ export class ChatService {
   async chatGroupMessage(
     createGroupMessageDto: CreateGroupMessageDto,
   ): Promise<Message> {
+    const userId = createGroupMessageDto.userId
+      ? new Types.ObjectId(createGroupMessageDto.userId)
+      : null;
+    const roomId = createGroupMessageDto.roomId
+      ? new Types.ObjectId(createGroupMessageDto.roomId)
+      : null;
+
+    // Kiểm tra và thêm user vào nhóm nếu chưa tồn tại
+    if (userId && roomId) {
+      await this.roomModel.updateOne(
+        { _id: roomId, members: { $ne: userId } },
+        { $push: { members: userId } },
+      );
+    }
+
+    // Tạo một tin nhắn mới
     const groupMessage = new this.messageModel({
-      userId: createGroupMessageDto.userId
-        ? new Types.ObjectId(createGroupMessageDto.userId)
-        : null,
+      userId: userId,
       content: createGroupMessageDto.content,
-      roomId: createGroupMessageDto.roomId
-        ? new Types.ObjectId(createGroupMessageDto.roomId)
-        : null,
+      roomId: roomId,
     });
 
     return groupMessage.save();
