@@ -3,9 +3,9 @@ import { Document, Types } from 'mongoose';
 import { RoleRoom } from '../chat.enum';
 
 @Schema({ timestamps: true })
-export class ChatRoom extends Document {
+export class Room extends Document {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
-  users: Types.ObjectId[];
+  members: Types.ObjectId[];
 
   @Prop({ type: String })
   groupName: string;
@@ -14,4 +14,4 @@ export class ChatRoom extends Document {
   role: RoleRoom;
 }
 
-export const ChatRoomSchema = SchemaFactory.createForClass(ChatRoom);
+export const RoomSchema = SchemaFactory.createForClass(Room);
