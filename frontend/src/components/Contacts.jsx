@@ -18,6 +18,7 @@ export const Contacts = ({
   onSelectContact,
   onUpdateContacts,
   socket,
+  onSelectGroup,
 }) => {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserAvatar, setCurrentUserAvatar] = useState(undefined);
@@ -41,7 +42,7 @@ export const Contacts = ({
 
   useEffect(() => {
     const fetchGroupChats = async () => {
-      const res = await axiosInstance.get("/api/chat/rooms");
+      const res = await axiosInstance.get("/api/chat/message/group");
       setGroupChats(res.data.data);
     };
 
@@ -118,7 +119,8 @@ export const Contacts = ({
     onUpdateContacts(user, "add");
   };
 
-  const handleRemoveFriend = async (user) => {
+  const handleRemoveFriend = async (e, user) => {
+    e.stopPropagation();
     const friendId = user._id;
     const res = await axiosInstance.delete(`api/v1/user/${friendId}`, {
       friendId: [user._id],
@@ -162,7 +164,7 @@ export const Contacts = ({
                     <div className="username">
                       <h4>{contact.username}</h4>
                       <IoPersonRemove
-                        onClick={() => handleRemoveFriend(contacts[index])}
+                        onClick={(e) => handleRemoveFriend(e, contacts[index])}
                       />
                     </div>
                   </div>
@@ -187,7 +189,7 @@ export const Contacts = ({
                       <img
                         src={getAvatarSource(
                           group?.members[0]?.avatarImage ||
-                            "https://images.unsplash.com/photo-1732480509151-cb3d991ff9a2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwyMHx8fGVufDB8fHx8fA%3D%3D"
+                            "https://raw.githubusercontent.com/lpcisdabest7/Chat-Socket/d00f3b28a57809871969d786d1a245582d1a63de/backend/src/image-logo/logo.jpeg"
                         )}
                         alt={group.groupName}
                       />

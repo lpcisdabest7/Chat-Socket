@@ -15,6 +15,7 @@ export const Chat = () => {
   const [currentChat, setCurrentChat] = useState(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [isGroupChat, setIsGroupChat] = useState(false);
+  const [currentGroup, setCurrentGroup] = useState(undefined);
 
   const navigate = useNavigate();
   const socket = useRef();
@@ -61,8 +62,10 @@ export const Chat = () => {
     console.log(contact);
     if (contact.members) {
       setIsGroupChat(true);
+      setCurrentGroup(contact);
     } else {
       setIsGroupChat(false);
+      setCurrentGroup(undefined);
     }
     setCurrentChat(contact);
   };
@@ -78,6 +81,8 @@ export const Chat = () => {
     });
   };
 
+  const handleSelectGroup = () => {};
+
   return (
     <StyledChat>
       <div className="container" style={{ backgroundColor: "#1b1b1f" }}>
@@ -88,6 +93,7 @@ export const Chat = () => {
           onSelectContact={handleSelectContact}
           onUpdateContacts={handleContactsUpdate}
           socket={socket.current}
+          onSelectGroup={handleSelectGroup}
         />
         {isLoading && currentChat === undefined ? (
           <Welcome user={currentUser} />
@@ -95,6 +101,7 @@ export const Chat = () => {
           <ChatGroupContainer
             currentUser={currentUser}
             socket={socket.current}
+            currentGroup={currentGroup}
           />
         ) : (
           <ChatContainer

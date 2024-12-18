@@ -1,9 +1,31 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
+import { ChatGroupHeader } from "./ChatGroupHeader";
+import { ChatGroupMessageContent } from "./ChatGroupMessageContent";
+import { ChatInput } from "./ChatInput";
 
-export const ChatGroupContainer = () => {
+export const ChatGroupContainer = ({ currentUser, socket, currentGroup }) => {
+  const handleSendChat = async (message) => {
+    console.log(message);
+    if (socket) {
+      socket.emit("sendGroupMessage", {
+        userId: currentUser._id,
+        content: message,
+        roomId: currentGroup._id,
+      });
+    }
+  };
+
   return (
-    <StyledChatGroupContainer>ChatGroupContainer</StyledChatGroupContainer>
+    <StyledChatGroupContainer>
+      <ChatGroupHeader currentGroup={currentGroup} />
+      <ChatGroupMessageContent
+        currentGroup={currentGroup}
+        currentUser={currentUser}
+        socket={socket}
+      />
+      <ChatInput handleSendChat={handleSendChat} />
+    </StyledChatGroupContainer>
   );
 };
 

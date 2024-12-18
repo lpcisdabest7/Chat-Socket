@@ -39,7 +39,7 @@ export const ChatMessages = ({ messages, currentUser }) => {
 };
 
 const StyledChatMessages = styled.div`
-  height: 80%;
+  height: 100%;
   padding: 0.5rem 1.5rem;
   display: flex;
   flex-direction: column;
