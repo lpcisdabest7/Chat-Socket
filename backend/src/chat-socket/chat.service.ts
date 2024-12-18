@@ -11,6 +11,7 @@ import { User } from '@app/user/user.schema';
 import { PagingOffsetDto } from '@libs/core/dto/pagination-offset.dto';
 import { PaginationDto } from './dto-message/pagination.dto';
 import { CreateGroupMessageDto } from './dto/create-message-group.dto';
+import { RoleRoom } from './chat.enum';
 
 @Injectable()
 export class ChatService {
@@ -56,6 +57,7 @@ export class ChatService {
   async createRoom(groupName: string): Promise<ChatRoom> {
     const room = new this.chatRoomModel();
     room.groupName = groupName;
+    room.role = RoleRoom.Group;
     return await room.save();
   }
 
@@ -119,10 +121,12 @@ export class ChatService {
       users: {
         $all: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
       },
+      role: RoleRoom.Private,
     });
     if (!room) {
       room = await this.chatRoomModel.create({
         users: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
+        role: RoleRoom.Private,
       });
     }
     return room;

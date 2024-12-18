@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { RoleRoom } from '../chat.enum';
 
 @Schema({ timestamps: true })
 export class ChatRoom extends Document {
@@ -8,6 +9,9 @@ export class ChatRoom extends Document {
 
   @Prop({ type: String })
   groupName: string;
+
+  @Prop({ type: RoleRoom })
+  role: RoleRoom;
 }
 
 export const ChatRoomSchema = SchemaFactory.createForClass(ChatRoom);
