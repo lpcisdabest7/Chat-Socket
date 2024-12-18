@@ -53,6 +53,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const room = await this.chatService.joinRoom(payload);
       client.join(payload.roomId);
+      console.log(payload);
 
       // Notify others in the room
       this.server.to(payload.roomId).emit('userJoined', {

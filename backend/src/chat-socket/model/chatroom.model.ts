@@ -10,7 +10,7 @@ export class ChatRoom extends Document {
   @Prop({ type: String })
   groupName: string;
 
-  @Prop({ type: RoleRoom })
+  @Prop({ type: String, enum: RoleRoom })
   role: RoleRoom;
 }
 

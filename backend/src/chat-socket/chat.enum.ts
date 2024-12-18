@@ -1,4 +1,4 @@
 export enum RoleRoom {
-  Private = 'Private',
-  Group = 'Group',
+  PrivateRoom = 'PrivateRoom',
+  GroupRoom = 'GroupRoom',
 }

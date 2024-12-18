@@ -57,7 +57,7 @@ export class ChatService {
   async createRoom(groupName: string): Promise<ChatRoom> {
     const room = new this.chatRoomModel();
     room.groupName = groupName;
-    room.role = RoleRoom.Group;
+    room.role = RoleRoom.GroupRoom;
     return await room.save();
   }
 
@@ -121,12 +121,12 @@ export class ChatService {
       users: {
         $all: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
       },
-      role: RoleRoom.Private,
+      role: RoleRoom.PrivateRoom,
     });
     if (!room) {
       room = await this.chatRoomModel.create({
         users: [new Types.ObjectId(senderId), new Types.ObjectId(receiverId)],
-        role: RoleRoom.Private,
+        role: RoleRoom.PrivateRoom,
       });
     }
     return room;
