@@ -38,10 +38,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const message = await this.chatService.chatGroupMessage(payload);
 
-      this.server.to(payload.roomId.toString()).emit('groupMessage', {
-        content: message.content,
-        userId: payload.userId,
-      });
+      this.server.to(payload.roomId.toString()).emit('groupMessage', message);
       return message;
     } catch (error) {
       this.logger.error('Error creating message:', error);
