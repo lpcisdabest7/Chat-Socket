@@ -26,7 +26,7 @@ const StyledWelcome = styled.div`
   justify-content: center;
   padding: 20px;
   width: 100%;
-  background-color: #1b1b1f;
+  background-color: rgb(71, 84, 104);
 
   .logo-chat {
     width: 400px;

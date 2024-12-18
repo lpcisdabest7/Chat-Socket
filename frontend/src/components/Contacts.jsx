@@ -14,8 +14,10 @@ const getAvatarSource = (avatarImage = "") => {
 export const Contacts = ({
   contacts,
   currentUser,
+  currentChat,
   onSelectContact,
   onUpdateContacts,
+  socket,
 }) => {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserAvatar, setCurrentUserAvatar] = useState(undefined);
@@ -27,6 +29,8 @@ export const Contacts = ({
   const [newMessage, setNewMessage] = useState("");
   const [currentGroupSelected, setCurrentGroupSelected] = useState(null);
   const [groupUsers, setGroupUsers] = useState([]);
+
+  useEffect(() => {}, [currentChat]);
 
   useEffect(() => {
     if (currentUser) {
@@ -61,9 +65,31 @@ export const Contacts = ({
     fetchGroupUsers();
   }, [contacts]);
 
-  const changeCurrentUserChat = (index) => {
+  const changeCurrentUserChat = async (index) => {
+    const selectedChat = contacts[index];
+
+    // Check if currentChat is correctly set
+    console.log("Selected chat:", selectedChat);
+
+    if (!selectedChat) {
+      return; // If no chat is selected, don't proceed
+    }
+
     setCurrentSelected(index);
-    onSelectContact(contacts[index]);
+    onSelectContact(selectedChat); // Select the contact
+
+    const res = await axiosInstance.post(
+      `api/chat/messages/${currentUser._id}/${selectedChat._id}`,
+      {
+        senderId: currentUser._id,
+        receiverId: selectedChat._id,
+      }
+    );
+
+    socket.emit("joinRoom", {
+      userId: currentUser._id,
+      roomId: res.data.data._id,
+    });
   };
 
   const handleCreateGroupChat = async () => {

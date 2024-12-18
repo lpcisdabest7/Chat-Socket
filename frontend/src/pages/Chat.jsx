@@ -15,6 +15,7 @@ export const Chat = () => {
   const [currentChat, setCurrentChat] = useState(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [isGroupChat, setIsGroupChat] = useState(false);
+
   const navigate = useNavigate();
   const socket = useRef();
 
@@ -54,6 +55,8 @@ export const Chat = () => {
     fetchUser();
   }, [currentUser]);
 
+  useEffect(() => {}, [currentChat]); // This will run every time currentChat changes
+
   const handleSelectContact = (contact) => {
     console.log(contact);
     if (contact.users) {
@@ -81,8 +84,10 @@ export const Chat = () => {
         <Contacts
           contacts={contacts}
           currentUser={currentUser}
+          currentChat={currentChat}
           onSelectContact={handleSelectContact}
           onUpdateContacts={handleContactsUpdate}
+          socket={socket.current}
         />
         {isLoading && currentChat === undefined ? (
           <Welcome user={currentUser} />

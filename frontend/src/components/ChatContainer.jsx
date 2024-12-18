@@ -16,34 +16,22 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
   const [messages, setMessages] = useState([]);
   const [roomID, setRoomID] = useState("");
 
-  // Track whether the component has mounted
-  const isMounted = useRef(false);
-
   useEffect(() => {
-    // Fetch messages on currentChat or roomID change
-    const fetchMessages = async () => {
-      if (!currentChat || !currentUser) return;
-
-      try {
-        const res = await axiosInstance.post(
-          `/api/chat/messages/${currentUser._id}/${currentChat._id}`,
-          {
-            senderId: currentUser._id,
-            receiverId: currentChat._id,
-          }
-        );
-
-        if (res.data.data._id) {
-          setRoomID(res.data.data._id); // Set roomID after fetching messages
+    const fetchMessages = () => {
+      if (!currentChat || !currentChat._id) return;
+      socket.on("userJoined", async (data) => {
+        try {
+          const response = await axiosInstance.get(
+            `/api/chat/messages/${data.roomId}`
+          );
+          setRoomID(data.roomId);
+          console.log(data.roomId);
+          console.log(response.data.data);
+          setMessages(response.data.data.results);
+        } catch (error) {
+          console.error("Error fetching messages:", error);
         }
-
-        const response = await axiosInstance.get(
-          `/api/chat/messages/${res.data.data._id}`
-        );
-        setMessages(response.data.data.results);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      }
+      });
     };
 
     fetchMessages();
@@ -51,6 +39,7 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
 
   // Handle sending a message via socket and update local state
   const handleSendChat = async (message) => {
+    console.log(message);
     if (socket) {
       socket.emit("sendPrivateMessage", {
         senderId: currentUser._id,
@@ -61,32 +50,22 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
     }
   };
 
-  // Set up socket listener for real-time messages
   useEffect(() => {
-    if (socket && currentChat && isMounted.current) {
-      socket.emit("joinRoom", {
-        roomId: roomID,
-        userId: currentUser._id,
-      });
+    // Set up the event listener
+    const handlePrivateMessage = (data) => {
+      console.log("Received private message");
+      if (data.roomId === roomID) {
+        setMessages((prevMessages) => [...prevMessages, data]);
+      }
+    };
 
-      socket.on("privateMessage", (data) => {
-        // Check if new message is for the current room
-        if (data.roomId === roomID) {
-          setMessages((prevMessages) => [...prevMessages, data]);
-        }
-      });
+    socket.on("privateMessage", handlePrivateMessage);
 
-      // Cleanup the listener when the component unmounts or currentChat changes
-      return () => {
-        socket.off("privateMessage");
-      };
-    }
-
-    // Set isMounted flag to true after the first render
-    if (!isMounted.current) {
-      isMounted.current = true;
-    }
-  }, [socket, currentChat, roomID]); // Only run when `socket` or `currentChat` changes
+    // Cleanup on unmount or when socket or roomID changes
+    return () => {
+      socket.off("privateMessage", handlePrivateMessage);
+    };
+  }, [socket, roomID]); // Now it will react to changes in socket or roomID
 
   return (
     <div className="chat-container" style={{ display: "flex", width: "100%" }}>

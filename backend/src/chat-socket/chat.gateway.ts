@@ -92,7 +92,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     try {
       const message = await this.chatService.createPrivateMessage(payload);
-      // Ensure roomId is correct (could be an ObjectId or string)
+
       this.server.to(message.roomId.toString()).emit('privateMessage', message);
 
       return message;
