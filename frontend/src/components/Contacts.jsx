@@ -186,7 +186,7 @@ export const Contacts = ({
                     <div className="group-avatar">
                       <img
                         src={getAvatarSource(
-                          group?.users[0]?.avatarImage ||
+                          group?.members[0]?.avatarImage ||
                             "https://images.unsplash.com/photo-1732480509151-cb3d991ff9a2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwyMHx8fGVufDB8fHx8fA%3D%3D"
                         )}
                         alt={group.groupName}
@@ -212,8 +212,8 @@ export const Contacts = ({
               </div>
             </div>
 
-            <div className="group-users">
-              <h4>List Users</h4>
+            <div className="group-members">
+              <h4>List members</h4>
               {groupUsers.length ? (
                 groupUsers.map((user) => {
                   return (
@@ -233,7 +233,7 @@ export const Contacts = ({
                 })
               ) : (
                 <div style={{ color: "#fff" }}>
-                  You are friend over users system
+                  You are friend over members system
                 </div>
               )}
             </div>
@@ -416,7 +416,7 @@ const StyledContacts = styled.div`
       }
     }
 
-    .group-users {
+    .group-members {
       display: flex;
       flex-direction: column;
       gap: 1rem;

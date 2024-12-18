@@ -59,7 +59,7 @@ export const Chat = () => {
 
   const handleSelectContact = (contact) => {
     console.log(contact);
-    if (contact.users) {
+    if (contact.members) {
       setIsGroupChat(true);
     } else {
       setIsGroupChat(false);
