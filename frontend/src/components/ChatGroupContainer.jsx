@@ -6,7 +6,6 @@ import { ChatInput } from "./ChatInput";
 
 export const ChatGroupContainer = ({ currentUser, socket, currentGroup }) => {
   const handleSendChat = async (message) => {
-    console.log(message);
     if (socket) {
       socket.emit("sendGroupMessage", {
         userId: currentUser._id,
@@ -15,18 +14,38 @@ export const ChatGroupContainer = ({ currentUser, socket, currentGroup }) => {
       });
     }
   };
+ useEffect(() => {
+  if (socket && currentGroup) {
+    console.log("Joining room:", currentGroup._id);
 
-  return (
-    <StyledChatGroupContainer>
-      <ChatGroupHeader currentGroup={currentGroup} />
-      <ChatGroupMessageContent
-        currentGroup={currentGroup}
-        currentUser={currentUser}
-        socket={socket}
-      />
-      <ChatInput handleSendChat={handleSendChat} />
-    </StyledChatGroupContainer>
-  );
+    socket.emit("joinRoom", {
+      roomId: currentGroup._id,
+      userId: currentUser._id,
+    });
+
+    socket.on("userJoined", (data) => {
+      console.log("User joined room:", data);
+    });
+
+    return () => {
+      console.log("Leaving room:", currentGroup._id);
+      socket.emit("leaveRoom", { roomId: currentGroup._id }); // Nếu có logic leave room ở backend
+      socket.off("userJoined");
+    };
+  }
+}, [socket, currentGroup]);
+
+return (
+  <StyledChatGroupContainer>
+    <ChatGroupHeader currentGroup={currentGroup} />
+    <ChatGroupMessageContent
+      currentGroup={currentGroup}
+      currentUser={currentUser}
+      socket={socket}
+    />
+    <ChatInput handleSendChat={handleSendChat} />
+  </StyledChatGroupContainer>
+);
 };
 
 const StyledChatGroupContainer = styled.div`
