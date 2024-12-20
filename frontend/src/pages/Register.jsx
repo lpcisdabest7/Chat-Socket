@@ -36,11 +36,9 @@ export const Register = () => {
   const { login } = useAuth();
 
   const onSubmit = async (data) => {
-    console.log(data);
     try {
       const res = await axiosInstance.post("api/v1/auth/register", data);
       if (res.status === 200) {
-        console.log("Register response", res.data.data);
         navigate("/login");
       }
     } catch (error) {
@@ -49,12 +47,10 @@ export const Register = () => {
   };
 
   const handleGoogleLogin = async (response) => {
-    console.log(response);
     try {
       const res = await axiosInstance.post("api/v1/auth/google/login", {
         idToken: response.credential,
       });
-      console.log(res);
 
       console.log("Google login response", res.data.data);
       const token = res.data.data.tokens.accessToken;

@@ -25,8 +25,6 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
             `/api/chat/messages/${data.roomId}`
           );
           setRoomID(data.roomId);
-          console.log(data.roomId);
-          console.log(response.data.data);
           setMessages(response.data.data.results);
         } catch (error) {
           console.error("Error fetching messages:", error);
@@ -39,7 +37,6 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
 
   // Handle sending a message via socket and update local state
   const handleSendChat = async (message) => {
-    console.log(message);
     if (socket) {
       socket.emit("sendPrivateMessage", {
         senderId: currentUser._id,

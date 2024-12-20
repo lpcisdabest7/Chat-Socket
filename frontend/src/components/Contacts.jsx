@@ -69,9 +69,6 @@ export const Contacts = ({
   const changeCurrentUserChat = async (index) => {
     const selectedChat = contacts[index];
 
-    // Check if currentChat is correctly set
-    console.log("Selected chat:", selectedChat);
-
     if (!selectedChat) {
       return; // If no chat is selected, don't proceed
     }
@@ -125,7 +122,6 @@ export const Contacts = ({
     const res = await axiosInstance.delete(`api/v1/user/${friendId}`, {
       friendId: [user._id],
     });
-    console.log(res);
     setGroupUsers((prev) => [...prev, user]);
     onUpdateContacts(user, "remove");
   };

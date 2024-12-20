@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import axiosInstance from "../utils";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { FaBell } from "react-icons/fa"; // Import the bell icon
 
 const getAvatarSource = (
   avatarImage = "https://plus.unsplash.com/premium_photo-1732757787056-bb8a19f1c855?q=80&w=1954&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -17,8 +20,8 @@ export const ChatGroupMessageContent = ({
   socket,
 }) => {
   const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
 
-  // Function to format the timestamp as "Today", "Yesterday", or a date
   const formatTimestamp = (createdAt) => {
     const messageDate = new Date(createdAt);
     const currentDate = new Date();
@@ -51,7 +54,6 @@ export const ChatGroupMessageContent = ({
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
       setMessages((prevMessages) => {
-        console.log("Updating messages", prevMessages, sortedMessages);
         return [...sortedMessages];
       });
     };
@@ -61,8 +63,24 @@ export const ChatGroupMessageContent = ({
 
   useEffect(() => {
     const handleGroupMessage = (data) => {
-      console.log(data);
       if (data.roomId === currentGroup._id) {
+        console.log("HIIIIIIII", data);
+
+        // Check if the current user is NOT the sender (i.e., it's the receiver)
+        if (data.userId._id !== currentUser._id) {
+          // Only show notification for the receiver with a bell icon
+          toast(<BellNotification content={data.content} />, {
+            position: "top-right",
+            autoClose: 5000, // Duration of the toast in ms
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+
+        // Update message state with the new message
         setMessages((prevMessages) => [...prevMessages, data]);
       }
     };
@@ -72,7 +90,13 @@ export const ChatGroupMessageContent = ({
     return () => {
       socket.off("groupMessage", handleGroupMessage);
     };
-  }, [socket, currentGroup]);
+  }, [socket, currentGroup, currentUser]);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   return (
     <StyledChatGroupMessageContent>
@@ -108,11 +132,43 @@ export const ChatGroupMessageContent = ({
               </div>
             </div>
           </div>
+          <div ref={messagesEndRef}></div>
         </MessageBubble>
       ))}
+      <ToastContainer /> {/* This renders the toast container */}
     </StyledChatGroupMessageContent>
   );
 };
+
+// Custom Bell Notification Component
+const BellNotification = ({ content }) => (
+  <BellNotificationWrapper>
+    <div className="bell-icon">
+      <FaBell size={24} color="#fff" />
+    </div>
+    <div className="notification-content">{content}</div>
+  </BellNotificationWrapper>
+);
+
+// Styled Components for Bell Notification
+const BellNotificationWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: #333;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  max-width: 300px;
+  .bell-icon {
+    margin-right: 10px;
+    background-color: #007bff;
+    border-radius: 50%;
+    padding: 5px;
+  }
+  .notification-content {
+    font-size: 14px;
+  }
+`;
 
 const MessageBubble = styled.div`
   display: flex;

@@ -37,7 +37,6 @@ export const Login = () => {
       const res = await axiosInstance.post("api/v1/auth/login", data);
       if (res.status === 200) {
         const token = res.data?.data?.token?.accessToken;
-        console.log(token);
         if (token) {
           login(token);
           if (!res.data.data.user.isSet) {
@@ -53,14 +52,11 @@ export const Login = () => {
   };
 
   const handleGoogleLogin = async (response) => {
-    console.log(response);
     try {
       const res = await axiosInstance.post("api/v1/auth/google/login", {
         idToken: response.credential,
       });
-      console.log(res);
 
-      console.log("Google login response", res.data.data);
       const token = res.data.data.tokens.accessToken;
       if (token) {
         login(token);
@@ -75,7 +71,6 @@ export const Login = () => {
 
   const handleFacebookLogin = async (event) => {
     event.preventDefault();
-    console.log("Facebook login triggered");
   };
 
   return (

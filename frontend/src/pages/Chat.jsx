@@ -59,7 +59,6 @@ export const Chat = () => {
   useEffect(() => {}, [currentChat]); // This will run every time currentChat changes
 
   const handleSelectContact = (contact) => {
-    console.log(contact);
     if (contact.members) {
       setIsGroupChat(true);
       setCurrentGroup(contact);
