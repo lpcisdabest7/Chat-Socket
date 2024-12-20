@@ -61,7 +61,7 @@ const StyledChatInput = styled.div`
   display: grid;
   grid-template-columns: 1% 99%;
   align-items: center;
-  background: #1a1a30;
+  background: #030318;
   gap: 1rem;
   width: 100%;
   padding: 1rem;

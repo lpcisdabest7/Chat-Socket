@@ -99,7 +99,7 @@ export const ChatContainer = ({ currentChat, currentUser, socket }) => {
 const StyledChat = styled.div`
   display: flex;
   flex-direction: column;
-  background: #0a0a15;
+  background: #1a1a28;
   width: 100%;
   /* padding: 0.5rem 0.5rem; */
 
@@ -109,6 +109,7 @@ const StyledChat = styled.div`
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 0.5rem;
+    background-color: #2e2e45;
 
     .user-details {
       display: flex;

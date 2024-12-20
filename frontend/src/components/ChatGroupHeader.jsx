@@ -33,9 +33,8 @@ const StyledChatHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #1a1a28;
+  background-color: #5252b4;
   padding: 15px;
-  border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 
   .group-details {
