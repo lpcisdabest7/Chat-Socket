@@ -31,4 +31,4 @@ RUN yarn install --only=production --ignore-scripts
 COPY --from=development /usr/src/app/dist ./dist
 COPY --from=development /usr/src/app/package.json package.json
 
-CMD ["yarn", "start:dev"]
+CMD ["yarn", "start:prod"]
