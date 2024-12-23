@@ -3,6 +3,7 @@ import styled from "styled-components";
 import axiosInstance from "../utils";
 import { IoMdPersonAdd } from "react-icons/io";
 import { IoPersonRemove } from "react-icons/io5";
+import { FaBell } from "react-icons/fa";
 
 const getAvatarSource = (avatarImage = "") => {
   if (avatarImage.startsWith("PHN")) {
@@ -192,6 +193,9 @@ export const Contacts = ({
                     </div>
                     <div className="group-name">
                       <h4>{group.groupName}</h4>
+                      <div className="group-bell">
+                        <FaBell size={20} />
+                      </div>
                     </div>
                   </div>
                 ))
@@ -379,10 +383,19 @@ const StyledContacts = styled.div`
         }
 
         .group-name {
+          display: flex;
+          align-items: center;
+          flex: 1;
+
           h4 {
             font-size: 1rem;
             font-weight: 400;
             color: #fff;
+          }
+
+          .group-bell {
+            flex: 1;
+            text-align: right;
           }
         }
       }
